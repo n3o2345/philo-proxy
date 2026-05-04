@@ -1,0 +1,111 @@
+# PhiloProxy — docker compose
+#
+# Quick start:
+#   cp .env.example .env   # edit DATA_DIR, TZ, etc.
+#   docker compose up -d
+#
+# Intel QSV instead of NVIDIA:
+#   docker compose --profile intel up -d
+
+services:
+
+  # ── NVIDIA NVENC (default) ──────────────────────────────────────────────────
+  philo-proxy:
+    image: ghcr.io/${GHCR_REPO:-youruser/philo-proxy}:latest
+    # Or build locally:
+    # build: .
+    container_name: philo-proxy
+    runtime: nvidia
+    deploy:
+      resources:
+        limits:   { memory: 4G }
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu, video, compute, utility, graphics]
+          memory: 2G
+    environment:
+      TZ:                      ${TZ:-America/Chicago}
+      PORT:                    ${PORT:-5050}
+      DB_PATH:                 /data/tvnow.db
+      # Philo — x11grab display
+      DISPLAY:                 ":200"
+      # Philo — PulseAudio
+      PULSE_SERVER:            unix:/var/run/pulse/native
+      PULSE_COOKIE:            /dev/null
+      PULSE_LATENCY_MSEC:      "30"
+      # Philo — stream concurrency (one Xvfb display per stream)
+      MAX_PHILO_STREAMS:       ${MAX_PHILO_STREAMS:-3}
+      # EPG background refresh
+      EPG_REFRESH_HOURS:       ${EPG_REFRESH_HOURS:-6}
+      # NVIDIA
+      NVIDIA_VISIBLE_DEVICES:  all
+      NVIDIA_DRIVER_CAPABILITIES: all
+      FFMPEG_VIDEO_CODEC:      h264_nvenc
+      FFMPEG_NVENC_PRESET:     ${FFMPEG_NVENC_PRESET:-p4}
+      FFMPEG_NVENC_TUNE:       ${FFMPEG_NVENC_TUNE:-ll}
+      FFMPEG_LOGLEVEL:         ${FFMPEG_LOGLEVEL:-warning}
+    healthcheck:
+      test: [CMD, curl, -fsS, "http://localhost:${PORT:-5050}/api/health"]
+      interval: 30s
+      timeout:  10s
+      retries:  3
+      start_period: 60s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    network_mode: host
+    restart: unless-stopped
+    shm_size: 512mb
+    volumes:
+      - philo_data:/data
+
+  # ── Intel QSV (opt-in) ──────────────────────────────────────────────────────
+  philo-proxy-intel:
+    image: ghcr.io/${GHCR_REPO:-youruser/philo-proxy}:latest
+    # build: .
+    container_name: philo-proxy
+    profiles: [intel]
+    devices:
+      - /dev/dri:/dev/dri
+    deploy:
+      resources:
+        limits: { memory: 4G }
+        reservations: { memory: 2G }
+    group_add: [video, render]
+    environment:
+      TZ:                 ${TZ:-America/Chicago}
+      PORT:               ${PORT:-5050}
+      DB_PATH:            /data/tvnow.db
+      DISPLAY:            ":200"
+      PULSE_SERVER:       unix:/var/run/pulse/native
+      PULSE_COOKIE:       /dev/null
+      PULSE_LATENCY_MSEC: "30"
+      MAX_PHILO_STREAMS:  ${MAX_PHILO_STREAMS:-3}
+      EPG_REFRESH_HOURS:  ${EPG_REFRESH_HOURS:-6}
+      LIBVA_DRIVER_NAME:  i965
+      FFMPEG_VIDEO_CODEC: h264_qsv
+      FFMPEG_LOGLEVEL:    ${FFMPEG_LOGLEVEL:-warning}
+    healthcheck:
+      test: [CMD, curl, -fsS, "http://localhost:${PORT:-5050}/api/health"]
+      interval: 30s
+      timeout:  10s
+      retries:  3
+      start_period: 60s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    network_mode: host
+    restart: unless-stopped
+    shm_size: 512mb
+    volumes:
+      - philo_data:/data
+
+volumes:
+  philo_data:
+    driver: local
+    driver_opts:
+      type:   none
+      o:      bind
+      device: ${DATA_DIR:-./data}

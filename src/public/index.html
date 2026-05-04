@@ -1,0 +1,3679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TVNow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #080a0f;
+  --surface:   #0e1017;
+  --surface2:  #141720;
+  --surface3:  #1a1e2b;
+  --border:    #1f2435;
+  --border2:   #252b3d;
+  --accent:    #4f7fff;
+  --accent-dim:#2a3d6e;
+  --accent-glow:rgba(79,127,255,0.15);
+  --text:      #dde2f0;
+  --text-dim:  #a0a8c0;
+  --muted:     #505878;
+  --green:     #34d399;
+  --green-dim: #0d3326;
+  --red:       #f87171;
+  --red-dim:   #3d1515;
+  --amber:     #fbbf24;
+  --radius:    8px;
+  --sidebar:   220px;
+  --topbar-h:  52px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Sidebar ─────────────────────────────────────── */
+#sidebar {
+  width: var(--sidebar);
+  min-width: var(--sidebar);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+}
+#sidebar-header {
+  height: var(--topbar-h);
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.logo-mark {
+  width: 28px; height: 28px;
+  background: var(--accent);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: #fff; letter-spacing: -1px;
+  flex-shrink: 0;
+  box-shadow: 0 0 16px rgba(79,127,255,0.35);
+}
+.brand-name {
+  font-size: 15px; font-weight: 700; letter-spacing: -.4px; color: #fff;
+}
+.brand-name span { color: var(--accent); }
+
+nav { flex: 1; padding: 6px 8px; overflow-y: auto; }
+nav a {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 6px;
+  margin-bottom: 1px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background .12s, color .12s;
+  cursor: pointer;
+  user-select: none;
+}
+nav a:hover  { background: var(--surface2); color: var(--text-dim); }
+nav a.active { background: var(--accent-glow); color: var(--accent); }
+nav a .nav-icon { width: 16px; text-align: center; font-size: 13px; flex-shrink: 0; }
+
+.nav-section {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 10px 10px 4px;
+  margin-top: 4px;
+}
+
+#sidebar-footer {
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.sys-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 3px;
+}
+.sys-row span:last-child { color: var(--text-dim); font-family: 'DM Mono', monospace; font-size: 10px; }
+.sys-bar {
+  height: 2px;
+  background: var(--border2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.sys-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width .5s ease;
+}
+
+/* ── Main layout ─────────────────────────────────── */
+#main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+#topbar {
+  height: var(--topbar-h);
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  flex-shrink: 0;
+  gap: 12px;
+}
+#topbar h1 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -.2px;
+}
+#topbar .actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+#content { flex: 1; overflow-y: auto; padding: 18px 20px; }
+
+/* ── Cards ───────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.card-title { font-weight: 600; font-size: 13px; color: var(--text); letter-spacing: -.1px; }
+
+/* ── Stat boxes ──────────────────────────────────── */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); gap: 10px; }
+.stat-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  transition: border-color .15s;
+}
+.stat-box:hover { border-color: var(--border2); }
+.stat-box .label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+}
+.stat-box .value {
+  font-size: 26px;
+  font-weight: 700;
+  margin-top: 5px;
+  color: #fff;
+  line-height: 1;
+  letter-spacing: -1px;
+  font-feature-settings: "tnum";
+}
+.stat-box .sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* ── Tables ──────────────────────────────────────── */
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left;
+  padding: 7px 12px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  font-size: 13px;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .2px;
+}
+.badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.badge.green { background: rgba(52,211,153,.1); color: var(--green); border: 1px solid rgba(52,211,153,.2); }
+.badge.green::before { background: var(--green); }
+.badge.red   { background: rgba(248,113,113,.1); color: var(--red);   border: 1px solid rgba(248,113,113,.2); }
+.badge.red::before { background: var(--red); }
+.badge.blue  { background: rgba(79,127,255,.12); color: var(--accent); border: 1px solid rgba(79,127,255,.25); }
+.badge.blue::before { background: var(--accent); }
+.badge.gray  { background: rgba(80,88,120,.15); color: var(--muted); border: 1px solid var(--border2); }
+.badge.gray::before { background: var(--muted); }
+
+/* ── Buttons ─────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: opacity .12s, background .12s, box-shadow .12s;
+  white-space: nowrap;
+  letter-spacing: -.1px;
+}
+.btn:hover { opacity: .88; }
+.btn:active { opacity: .75; }
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 1px 8px rgba(79,127,255,.3);
+}
+.btn-primary:hover { box-shadow: 0 2px 12px rgba(79,127,255,.45); opacity: 1; background: #6691ff; }
+.btn-secondary {
+  background: var(--surface2);
+  color: var(--text-dim);
+  border: 1px solid var(--border2);
+}
+.btn-secondary:hover { background: var(--surface3); color: var(--text); }
+.btn-danger  {
+  background: rgba(248,113,113,.1);
+  color: var(--red);
+  border: 1px solid rgba(248,113,113,.2);
+}
+.btn-danger:hover { background: rgba(248,113,113,.18); }
+.btn-sm { padding: 4px 9px; font-size: 11px; border-radius: 5px; }
+.btn-icon { padding: 5px 7px; border-radius: 5px; }
+
+/* ── Forms ───────────────────────────────────────── */
+.form-group { margin-bottom: 13px; }
+label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-bottom: 5px;
+  letter-spacing: .1px;
+}
+input, select, textarea {
+  width: 100%;
+  padding: 8px 11px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .12s, box-shadow .12s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(79,127,255,.15);
+}
+input::placeholder { color: var(--muted); }
+textarea { resize: vertical; min-height: 80px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+select option { background: var(--surface2); }
+
+/* ── Modal ───────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn .15s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 22px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 80px rgba(0,0,0,.6);
+  animation: slideUp .18s ease;
+}
+@keyframes slideUp { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.modal-title { font-size: 15px; font-weight: 700; letter-spacing: -.2px; }
+.modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+
+/* ── Channel grid ────────────────────────────────── */
+.ch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.ch-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: default;
+  transition: border-color .12s, background .12s;
+}
+.ch-card:hover  { border-color: var(--border2); background: var(--surface3); }
+.ch-card.disabled { opacity: .35; }
+.ch-logo {
+  width: 36px; height: 36px;
+  border-radius: 6px;
+  object-fit: contain;
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.ch-logo-placeholder {
+  width: 36px; height: 36px;
+  border-radius: 6px;
+  background: var(--surface3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+  color: var(--muted);
+}
+.ch-info .name  { font-weight: 600; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ch-info .group { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.ch-info .num   { font-size: 10px; color: var(--accent); margin-bottom: 1px; font-weight: 600; font-family: 'DM Mono', monospace; }
+
+/* ── EPG Guide ───────────────────────────────────── */
+#guide-wrap { overflow-x: auto; }
+.guide-table { border-collapse: collapse; min-width: 900px; width: 100%; }
+.guide-table .ch-col { width: 150px; min-width: 150px; }
+.guide-row td, .guide-row th { border: 1px solid var(--border); padding: 0; vertical-align: middle; }
+.guide-ch-cell { padding: 7px 10px; background: var(--surface2); }
+.guide-ch-cell .name { font-weight: 600; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.guide-prog { padding: 6px 8px; font-size: 11px; cursor: default; }
+.guide-prog.now { background: rgba(79,127,255,.15); border-left: 2px solid var(--accent); }
+.guide-prog .prog-title { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.guide-prog .prog-time  { font-size: 10px; color: var(--muted); margin-top: 2px; font-family: 'DM Mono', monospace; }
+
+/* ── Source color palette & filters ─────────────── */
+.src-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; flex-shrink:0; }
+.guide-ch-cell.has-color { border-left: 3px solid var(--src-color, var(--border)); }
+.guide-sort-bar { display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+.guide-sort-bar label { font-size:10px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; }
+.src-filter-btn {
+  display:inline-flex; align-items:center; padding:4px 9px;
+  border-radius:20px; font-size:11px; font-weight:600;
+  border:1px solid var(--border2); cursor:pointer;
+  background:var(--surface2); color:var(--text-dim);
+  transition:opacity .12s, background .12s;
+}
+.src-filter-btn:hover { background: var(--surface3); }
+.src-filter-btn.inactive { opacity:.3; }
+.src-filter-btn .dot { width:7px; height:7px; border-radius:50%; margin-right:5px; }
+
+/* ── Search ──────────────────────────────────────── */
+.search-wrap { position: relative; }
+.search-wrap input { padding-left: 32px; }
+.search-wrap .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 12px; pointer-events: none; }
+
+/* ── Logs ────────────────────────────────────────── */
+#log-container {
+  background: #06080d;
+  border-radius: 6px;
+  padding: 10px 12px;
+  height: 420px;
+  overflow-y: auto;
+  font-family: 'DM Mono', 'Courier New', monospace;
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+.log-entry { display: flex; gap: 8px; align-items: baseline; padding: 1px 0; }
+.log-entry .ts   { color: #344060; flex-shrink: 0; font-size: 10px; }
+.log-entry .lvl  { flex-shrink: 0; font-size: 9px; font-weight: 700; letter-spacing: .5px; padding: 1px 5px; border-radius: 3px; }
+.log-entry.INFO  .lvl { background: rgba(79,127,255,.15); color: var(--accent); }
+.log-entry.WARN  .lvl { background: rgba(251,191,36,.12); color: var(--amber); }
+.log-entry.ERROR .lvl { background: rgba(248,113,113,.15); color: var(--red); }
+.log-entry .msg { color: var(--text-dim); flex: 1; min-width: 0; word-break: break-all; }
+
+/* ── Map members ─────────────────────────────────── */
+.map-member {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  margin-bottom: 4px;
+  transition: border-color .12s;
+}
+.map-member:hover { border-color: var(--border2); }
+.map-member.disabled { opacity: .4; }
+.priority-badge {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-family: 'DM Mono', monospace;
+}
+
+/* ── Map logo & meta ─────────────────────────────── */
+.map-logo-wrap {
+  position: relative;
+  cursor: pointer;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.map-logo-wrap:hover .map-logo-edit-hint { opacity: 1; }
+.map-logo-edit-hint {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,.55);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity .15s;
+}
+.map-logo-edit-hint::after { content: '✎'; color: #fff; }
+.map-logo-placeholder {
+  width: 44px; height: 44px;
+  border-radius: 8px;
+  background: var(--surface2);
+  border: 1px dashed var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted);
+  font-size: 18px;
+}
+.map-logo-thumb {
+  height: 18px;
+  border-radius: 3px;
+  object-fit: contain;
+  vertical-align: middle;
+}
+.map-meta-badge {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+  white-space: nowrap;
+  font-weight: 500;
+}
+.map-meta-badge.muted { color: var(--muted); }
+.map-meta-btn {
+  background: none; border: none; cursor: pointer; padding: 0;
+  transition: opacity .12s;
+}
+.map-meta-btn:hover { opacity: .7; }
+
+/* ── EPG strip ───────────────────────────────────── */
+.map-epg-strip {
+  display: flex; gap: 6px; overflow-x: auto;
+  padding: 0 16px 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+.epg-slot {
+  flex-shrink: 0;
+  min-width: 110px; max-width: 150px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.epg-slot.current {
+  background: rgba(79,127,255,.1);
+  border-color: rgba(79,127,255,.3);
+}
+.epg-progress { height: 2px; background: var(--border2); border-radius: 2px; margin-top: 5px; overflow: hidden; }
+.epg-progress-fill { height: 100%; background: var(--accent); border-radius: 2px; }
+
+/* ── Pills & misc ────────────────────────────────── */
+.pill {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--surface3);
+  color: var(--muted);
+  border: 1px solid var(--border2);
+  letter-spacing: .1px;
+}
+.empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+.empty-state .icon { font-size: 40px; margin-bottom: 12px; opacity: .5; }
+.empty-state h3 { font-size: 15px; font-weight: 600; color: var(--text-dim); margin-bottom: 6px; }
+.empty-state p { font-size: 13px; }
+
+.hidden { display: none !important; }
+.flex { display: flex; }
+.gap-8 { gap: 8px; }
+.ml-auto { margin-left: auto; }
+.text-muted { color: var(--muted); }
+.text-sm { font-size: 12px; }
+
+/* ── Toast ───────────────────────────────────────── */
+#toast-container {
+  position: fixed; bottom: 20px; right: 20px; z-index: 200;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.toast {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  animation: toastIn .18s ease;
+  max-width: 300px;
+  box-shadow: 0 8px 30px rgba(0,0,0,.4);
+  display: flex; align-items: center; gap: 7px;
+}
+.toast::before { content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.toast.success { border-color: rgba(52,211,153,.3); color: var(--green); }
+.toast.success::before { background: var(--green); }
+.toast.error   { border-color: rgba(248,113,113,.3); color: var(--red); }
+.toast.error::before { background: var(--red); }
+@keyframes toastIn { from { transform: translateX(12px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+/* ── Scrollbar ───────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ── Code ────────────────────────────────────────── */
+code {
+  font-family: 'DM Mono', monospace;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: .9em;
+  color: var(--accent);
+}
+
+/* ── Divider ─────────────────────────────────────── */
+.section-divider {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .7px;
+  color: var(--muted);
+  padding: 12px 0 6px;
+}
+
+/* ── inp alias ───────────────────────────────────── */
+.inp { width: 100%; padding: 8px 11px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px; color: var(--text); font-size: 13px; font-family: inherit; outline: none; transition: border-color .12s; }
+.inp:focus { border-color: var(--accent); }
+/* ── Logo picker ─────────────────────────────────── */
+.logo-pick-btn {
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  transition: border-color .12s;
+  text-align: center;
+}
+.logo-pick-btn:hover { border-color: var(--border2); }
+.logo-pick-btn.active { border-color: var(--accent); background: var(--accent-glow); }
+
+/* ── Dedup rows ──────────────────────────────────── */
+.dedup-src-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--border); border-radius: 6px;
+  background: var(--surface2); cursor: grab;
+  margin-bottom: 4px; font-size: 13px; transition: background .1s;
+}
+.dedup-src-row:hover { background: var(--surface3); }
+
+/* ── Stat-box clickable ──────────────────────────── */
+.stat-box[onclick] { cursor: pointer; }
+.stat-box[onclick]:hover { border-color: var(--accent); }
+
+/* ── Links ───────────────────────────────────────── */
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Nav active left bar ─────────────────────────── */
+nav a { position: relative; }
+nav a.active::before {
+  content: '';
+  width: 2px; height: 14px;
+  background: var(--accent);
+  border-radius: 2px;
+  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+}
+
+/* ── Content fade-in ─────────────────────────────── */
+#content > .card, #content > .stat-grid, #content > div {
+  animation: contentFade .15s ease;
+}
+@keyframes contentFade { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Monospace helper ────────────────────────────── */
+.mono { font-family: 'DM Mono', monospace; font-size: .9em; }
+
+/* ── Number inputs clean ─────────────────────────── */
+input[type="number"] { -moz-appearance: textfield; text-align: center; }
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* ── Color picker ────────────────────────────────── */
+input[type="color"] {
+  height: 38px; padding: 3px 5px; cursor: pointer;
+  border-radius: 6px; border: 1px solid var(--border2); background: var(--surface2);
+}
+
+/* ── Guide time headers ──────────────────────────── */
+.guide-table thead th {
+  font-family: 'DM Mono', monospace !important;
+  font-size: 10px !important; font-weight: 500 !important;
+  background: var(--surface2) !important; border-color: var(--border) !important;
+}
+
+/* ── Topbar gradient ─────────────────────────────── */
+#topbar { background: linear-gradient(180deg, #10131c 0%, #0e1017 100%); }
+
+/* ── EPG result rows ─────────────────────────────── */
+.epg-result-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 8px 10px; border-radius: 6px; cursor: pointer;
+  background: var(--surface2); transition: background .1s; margin-bottom: 2px;
+}
+.epg-result-row:hover { background: var(--surface3); }
+.epg-result-row.active { background: var(--accent-glow); border: 1px solid rgba(79,127,255,.25); }
+
+/* ── Checkbox ────────────────────────────────────── */
+input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
+
+/* ── Event tags for webhooks ─────────────────────── */
+.event-tag {
+  display: inline-block; padding: 1px 6px;
+  border-radius: 4px; font-size: 10px; font-weight: 600;
+  background: var(--surface3); border: 1px solid var(--border2);
+  color: var(--text-dim); margin: 1px;
+  font-family: 'DM Mono', monospace;
+}
+
+/* ── Open-access warning banner ──────────────────── */
+.open-access-banner {
+  padding: 10px 14px;
+  background: rgba(251,191,36,.07);
+  border: 1px solid rgba(251,191,36,.2);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--amber);
+}
+
+/* ── Scrollbar refinement ────────────────────────── */
+nav::-webkit-scrollbar { width: 3px; }
+nav::-webkit-scrollbar-thumb { background: var(--border); }
+
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div id="sidebar">
+  <div id="sidebar-header">
+    <div class="logo-mark">TV</div>
+    <div class="brand-name">TV<span>Now</span></div>
+  </div>
+  <nav>
+    <div class="nav-section">Main</div>
+    <a class="active" data-page="dashboard" onclick="navigate('dashboard')"><span class="nav-icon">⊞</span> Dashboard</a>
+    <a data-page="guide"    onclick="navigate('guide')"><span class="nav-icon">▦</span> Guide</a>
+    <a data-page="channels" onclick="navigate('channels')"><span class="nav-icon">≡</span> Channels</a>
+    <a data-page="maps"     onclick="navigate('maps')"><span class="nav-icon">⇄</span> Channel Maps</a>
+    <div class="nav-section">Data</div>
+    <a data-page="sources"  onclick="navigate('sources')"><span class="nav-icon">◈</span> Sources</a>
+    <a data-page="epg"      onclick="navigate('epg')"><span class="nav-icon">◷</span> EPG Sources</a>
+    <div class="nav-section">System</div>
+    <a data-page="health"   onclick="navigate('health')"><span class="nav-icon">♥</span> Stream Health</a>
+    <a data-page="transcode" onclick="navigate('transcode')"><span class="nav-icon">⚙</span> Transcode</a>
+    <a data-page="webhooks" onclick="navigate('webhooks')"><span class="nav-icon">⚡</span> Webhooks</a>
+    <a data-page="users"    onclick="navigate('users')"><span class="nav-icon">◎</span> Users</a>
+    <a data-page="export"   onclick="navigate('export')"><span class="nav-icon">↗</span> Export</a>
+    <a data-page="logs"     onclick="navigate('logs')"><span class="nav-icon">▤</span> Logs</a>
+    <a data-page="settings" onclick="navigate('settings')"><span class="nav-icon">⊛</span> Settings</a>
+  </nav>
+  <div id="sidebar-footer">
+    <div class="sys-row"><span>Memory</span><span id="mem-pct">—</span></div>
+    <div class="sys-bar"><div class="sys-bar-fill" id="mem-bar" style="width:0%"></div></div>
+    <div class="sys-row"><span>CPU Load</span><span id="cpu-load">—</span></div>
+    <div class="sys-row" id="gpu-row" style="display:none"><span>GPU</span><span id="gpu-pct">—</span></div>
+  </div>
+</div>
+
+<!-- Main -->
+<div id="main">
+  <div id="topbar">
+    <h1 id="page-title">Dashboard</h1>
+    <div class="actions" id="topbar-actions"></div>
+  </div>
+  <div id="content"></div>
+</div>
+
+<!-- Toast -->
+<div id="toast-container"></div>
+
+<script>
+// 
+//  State
+// 
+let currentPage = 'dashboard';
+let _sources = [], _channels = [], _epgSources = [];
+let _guideSourceFilter = null; // null = all, or source id
+let _pluginTypes = [];
+
+
+// 
+//  Utilities
+// 
+async function api(path, opts={}) {
+  const res = await fetch(path, { headers: {'Content-Type':'application/json'}, ...opts });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+function toast(msg, type='success') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function fmt(n) { return n == null ? '' : String(n); }
+function fmtTime(unix) {
+  if (!unix) return '';
+  return new Date(unix * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
+function fmtDuration(s, e) {
+  if (!s || !e) return '';
+  const m = Math.round((e - s) / 60);
+  return m >= 60 ? `${Math.floor(m/60)}h ${m%60}m` : `${m}m`;
+}
+function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+function unesc(s) {
+  // Decode HTML entities stored in DB (e.g. &amp;  &) before display
+  if (!s || !s.includes('&')) return s||'';
+  const d = document.createElement('div'); d.innerHTML = s; return d.textContent||'';
+}
+function jsq(v) { return JSON.stringify(v == null ? '' : String(v)); }
+
+function modal(html, { onConfirm, title } = {}) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `<div class="modal">${html}</div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  return overlay;
+}
+
+// 
+//  Navigation
+// 
+function navigate(page) {
+  currentPage = page;
+  try { localStorage.setItem('tvnow_page', page); } catch(_) {}
+  document.querySelectorAll('nav a').forEach(a => a.classList.toggle('active', a.dataset.page === page));
+  document.getElementById('page-title').textContent = {
+    dashboard:'Dashboard', guide:'TV Guide', channels:'Channels', maps:'Channel Maps',
+    sources:'Sources', epg:'EPG Sources', export:'Export', logs:'System Logs',
+    settings:'Settings', health:'Stream Health', transcode:'Transcode Profiles',
+    webhooks:'Webhooks', users:'User Management',
+  }[page] || page;
+  document.getElementById('topbar-actions').innerHTML = '';
+  renderPage(page);
+}
+
+async function renderPage(page) {
+  const c = document.getElementById('content');
+  c.innerHTML = '<div class="empty-state" style="padding:40px 20px"><div style="color:var(--muted);font-size:13px">Loading…</div></div>';
+  try {
+    if (page === 'dashboard') await renderDashboard();
+    if (page === 'guide')     await renderGuide();
+    if (page === 'channels')  await renderChannels();
+    if (page === 'maps')      await renderMaps();
+    if (page === 'sources')   await renderSources();
+    if (page === 'epg')       await renderEpgSources();
+    if (page === 'health')    await renderStreamHealth();
+    if (page === 'transcode') await renderTranscodeProfiles();
+    if (page === 'webhooks')  await renderWebhooks();
+    if (page === 'users')     await renderUsers();
+    if (page === 'export')    renderExport();
+    if (page === 'logs')      await renderLogs();
+    if (page === 'settings')  await renderSettings();
+  } catch(err) {
+    c.innerHTML = `<div class="empty-state"><div class="icon"></div><p>${esc(err.message)}</p></div>`;
+  }
+}
+
+// 
+//  Dashboard
+// 
+async function renderDashboard() {
+  const [sources, channels, sys, health] = await Promise.all([
+    api('/api/sources'),
+    api('/api/channels'),
+    api('/api/system').catch(() => null),
+    api('/api/stream-health/active').catch(() => ({ active_streams: 0 })),
+  ]);
+  _sources  = sources;
+  _channels = channels;
+
+  const enabled   = channels.filter(c => c.enabled).length;
+  const srcActive = sources.filter(s => s.enabled).length;
+
+  const c = document.getElementById('content');
+  c.innerHTML = `
+    <div class="stat-grid" style="margin-bottom:20px">
+      <div class="stat-box"><div class="label">Sources</div><div class="value">${sources.length}</div><div class="sub">${srcActive} active</div></div>
+      <div class="stat-box"><div class="label">Channels</div><div class="value">${channels.length}</div><div class="sub">${enabled} enabled</div></div>
+      <div class="stat-box" style="cursor:pointer" onclick="navigate('health')"><div class="label">Active Streams</div><div class="value">${health.active_streams}</div><div class="sub">live viewers</div></div>
+      <div class="stat-box"><div class="label">Uptime</div><div class="value" id="uptime-val">${sys ? _fmtUptime(sys.uptime) : ''}</div><div class="sub">server</div></div>
+      ${sys?.gpu ? `<div class="stat-box"><div class="label">GPU</div><div class="value">${sys.gpu.gpuPct}%</div><div class="sub">${sys.gpu.name}</div></div>` : ''}
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">Sources</div><button class="btn btn-secondary btn-sm" onclick="navigate('sources')">Manage →</button></div>
+      ${sources.length === 0 ? '<div class="empty-state" style="padding:20px"><p>No sources yet. <a href="#" onclick="navigate(\'sources\')">Add one</a>.</p></div>' : `
+      <table>
+        <thead><tr><th>Name</th><th>Type</th><th>Channels</th><th>Last Sync</th><th>Status</th></tr></thead>
+        <tbody>${sources.map(s => {
+          const chs = channels.filter(c => c.source_id === s.id).length;
+          const color = s.color || SOURCE_COLORS[sources.findIndex(x=>x.id===s.id) % SOURCE_COLORS.length];
+          const lastSync = s.last_sync ? new Date(s.last_sync).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+          return `<tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0"></span>
+                <span style="font-weight:600">${esc(s.name)}</span>
+              </div>
+            </td>
+            <td><span class="pill" style="font-family:'DM Mono',monospace">${esc(s.type)}</span></td>
+            <td style="font-family:'DM Mono',monospace;font-size:12px">${chs}</td>
+            <td style="color:var(--muted);font-size:11px;font-family:'DM Mono',monospace">${lastSync}</td>
+            <td><span class="badge ${s.enabled ? 'green' : 'gray'}">${s.enabled ? 'Active' : 'Disabled'}</span></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>`}
+    </div>
+
+    ${sys ? `<div class="card">
+      <div class="card-header"><div class="card-title">System</div></div>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="label">Memory Used</div><div class="value">${sys.memory.usedMb} MB</div><div class="sub">of ${sys.memory.totalMb} MB (${sys.memory.pct}%)</div></div>
+        <div class="stat-box"><div class="label">CPU Cores</div><div class="value">${sys.cpu.cores}</div><div class="sub">Load: ${sys.cpu.load1} / ${sys.cpu.load5} / ${sys.cpu.load15}</div></div>
+        ${sys.gpu ? `<div class="stat-box"><div class="label">GPU Mem</div><div class="value">${sys.gpu.memUsedMb} MB</div><div class="sub">of ${sys.gpu.memTotalMb} MB - ${sys.gpu.tempC} degC</div></div>` : ''}
+      </div>
+    </div>` : ''}
+  `;
+}
+
+function _fmtUptime(s) {
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+
+// 
+//  TV Guide
+// 
+const SOURCE_COLORS = ['#3b82f6','#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#84cc16','#f97316','#14b8a6'];
+
+function getSourceColor(sourceId) {
+  const src = _sources.find(s => s.id === sourceId);
+  if (src && src.color) return src.color;
+  const idx = _sources.findIndex(s => s.id === sourceId);
+  return SOURCE_COLORS[Math.max(0, idx) % SOURCE_COLORS.length];
+}
+
+async function renderGuide() {
+  const c = document.getElementById('content');
+  const now   = Math.floor(Date.now() / 1000);
+  const from  = now - 1800;
+  const to    = now + 4 * 3600;
+
+  [_sources, _channels] = await Promise.all([api('/api/sources'), api('/api/channels?enabled=1')]);
+  const programs = await api(`/api/epg/guide?from=${from}&to=${to}`);
+
+  const progMap = {};
+  for (const p of programs) {
+    if (!progMap[p.epg_id]) progMap[p.epg_id] = [];
+    progMap[p.epg_id].push(p);
+  }
+
+  // Build time slots
+  const slots = [];
+  let t = Math.floor(from / 1800) * 1800;
+  while (t < to) { slots.push(t); t += 1800; }
+
+  // Source filter buttons
+  const activeSources = _sources.filter(s => _channels.some(ch => ch.source_id === s.id));
+  const filterBar = activeSources.length > 1 ? `
+    <div class="guide-sort-bar">
+      <label>Filter by source:</label>
+      ${activeSources.map(s => {
+        const color = getSourceColor(s.id);
+        const active = _guideSourceFilter === null || _guideSourceFilter === s.id;
+        return `<button class="src-filter-btn ${active ? '' : 'inactive'}" onclick="toggleGuideSourceFilter(${s.id})" style="border-color:${color}">
+          <span class="dot" style="background:${color}"></span>${esc(s.name)}
+        </button>`;
+      }).join('')}
+      ${_guideSourceFilter !== null ? `<button class="btn btn-sm btn-secondary" onclick="_guideSourceFilter=null;renderGuide()">Show All</button>` : ''}
+    </div>` : '';
+
+  // Sort: if filter active show that source's channels first, then others
+  let channels = [..._channels];
+  if (_guideSourceFilter !== null) {
+    channels = channels.filter(ch => ch.source_id === _guideSourceFilter);
+  } else {
+    // Sort by source order
+    channels.sort((a, b) => {
+      const ai = _sources.findIndex(s => s.id === a.source_id);
+      const bi = _sources.findIndex(s => s.id === b.source_id);
+      return ai - bi;
+    });
+  }
+
+  c.innerHTML = `
+    ${filterBar}
+    <div class="card" style="padding:0;overflow:hidden">
+      <div id="guide-wrap">
+        <table class="guide-table">
+          <thead><tr>
+            <th class="ch-col" style="padding:8px 10px;background:var(--surface2)">Channel</th>
+            ${slots.map(s => `<th style="padding:8px;background:var(--surface2);font-weight:400;color:var(--muted);min-width:120px">${fmtTime(s)}</th>`).join('')}
+          </tr></thead>
+          <tbody>
+            ${channels.map(ch => {
+              const progs = progMap[ch.epg_id] || [];
+              const color = getSourceColor(ch.source_id);
+              return `<tr class="guide-row">
+                <td><div class="guide-ch-cell has-color" style="--src-color:${color}">
+                  ${ch.logo_url ? `<img src="${esc(ch.logo_url)}" style="width:24px;height:24px;border-radius:4px;object-fit:contain;vertical-align:middle;margin-right:6px">` : ''}
+                  <span class="name">${esc(ch.name)}</span>
+                </div></td>
+                ${slots.map((s) => {
+                  const slotEnd = s + 1800;
+                  const prog = progs.find(p => p.start_time < slotEnd && p.end_time > s);
+                  if (!prog) return `<td style="background:var(--surface2);min-width:120px"><div class="guide-prog text-muted" style="font-size:11px">No data</div></td>`;
+                  const isNow = now >= prog.start_time && now < prog.end_time;
+                  return `<td style="min-width:120px"><div class="guide-prog ${isNow ? 'now' : ''}">
+                    <div class="prog-title">${esc(prog.title)}</div>
+                    <div class="prog-time">${fmtTime(prog.start_time)} - ${fmtDuration(prog.start_time, prog.end_time)}</div>
+                  </div></td>`;
+                }).join('')}
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function toggleGuideSourceFilter(sourceId) {
+  _guideSourceFilter = (_guideSourceFilter === sourceId) ? null : sourceId;
+  try { localStorage.setItem('tvnow_guideFilter', _guideSourceFilter === null ? '' : String(_guideSourceFilter)); } catch(_) {}
+  renderGuide();
+}
+
+// 
+//  Channels
+// 
+async function renderChannels() {
+  _channels = await api('/api/channels');
+  _sources  = await api('/api/sources');
+
+  const tb = document.getElementById('topbar-actions');
+  tb.innerHTML = `
+    <div class="search-wrap"><span class="search-icon"></span><input id="ch-search" placeholder="Search channels" oninput="filterChannels()" style="width:220px"></div>
+    <button class="btn btn-secondary" onclick="showDedupModal()" title="Remove duplicate channels"> Dedupe Channels</button>
+  `;
+
+  // Restore persisted search
+  try {
+    const saved = localStorage.getItem('tvnow_chSearch');
+    if (saved) { const el = document.getElementById('ch-search'); if (el) el.value = saved; }
+  } catch(_) {}
+
+  filterChannels();
+}
+
+function filterChannels() {
+  const q = document.getElementById('ch-search')?.value.toLowerCase() || '';
+  try { localStorage.setItem('tvnow_chSearch', document.getElementById('ch-search')?.value || ''); } catch(_) {}
+  const filtered = q ? _channels.filter(c => c.name.toLowerCase().includes(q) || (c.group_name||'').toLowerCase().includes(q)) : _channels;
+  renderChannelList(filtered);
+}
+
+function renderChannelList(channels) {
+  const c = document.getElementById('content');
+  if (!channels.length) {
+    c.innerHTML = `<div class="empty-state"><div class="icon"></div><h3>No channels</h3><p>Add a source to import channels.</p></div>`;
+    return;
+  }
+
+  // Group by source
+  const bySource = {};
+  for (const ch of channels) {
+    const src = _sources.find(s => s.id === ch.source_id);
+    const key = src ? `${src.name} (${src.type})` : 'Unknown Source';
+    if (!bySource[key]) bySource[key] = [];
+    bySource[key].push(ch);
+  }
+
+  c.innerHTML = Object.entries(bySource).map(([srcName, chs]) => `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">${esc(srcName)}</div>
+        <span class="pill">${chs.length} channels</span>
+      </div>
+      <div class="ch-grid">
+        ${chs.map(ch => `
+          <div class="ch-card ${ch.enabled ? '' : 'disabled'}" title="${esc(ch.name)}">
+            ${ch.logo_url
+              ? `<img class="ch-logo" src="${esc(ch.logo_url)}" onerror="this.style.display='none'">`
+              : `<div class="ch-logo-placeholder"></div>`}
+            <div class="ch-info" style="min-width:0">
+              ${ch.number ? `<div class="num">CH ${esc(ch.number)}</div>` : ''}
+              <div class="name">${esc(ch.name)}</div>
+              ${ch.group_name ? `<div class="group">${unesc(ch.group_name)}</div>` : ''}
+            </div>
+            <div style="margin-left:auto;display:flex;flex-direction:column;gap:4px">
+              <button class="btn btn-sm btn-secondary btn-icon" onclick="toggleChannel(${ch.id})" title="${ch.enabled ? 'Disable' : 'Enable'}">${ch.enabled ? '' : '-'}</button>
+              <button class="btn btn-sm btn-secondary btn-icon" onclick="playChannel(${ch.id})" title="Play stream">-</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function toggleChannel(id) {
+  await api(`/api/channels/${id}/toggle`, { method: 'POST' });
+  const ch = _channels.find(c => c.id === id);
+  if (ch) ch.enabled = ch.enabled ? 0 : 1;
+  filterChannels();
+}
+
+function playChannel(id) {
+  const url = `${window.location.origin}/stream/${id}`;
+  // Try to open in a video player  use an in-page modal with a video tag for HLS
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:720px;width:95%">
+      <div class="modal-header">
+        <div class="modal-title">- Stream Preview</div>
+        <button class="btn btn-icon btn-secondary" onclick="this.closest('.modal-overlay').remove()"></button>
+      </div>
+      <video id="preview-video" controls autoplay style="width:100%;border-radius:8px;background:#000;min-height:200px" src="${url}"></video>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span style="color:var(--muted);font-size:12px;flex:1;word-break:break-all">${url}</span>
+        <button class="btn btn-sm btn-secondary" onclick="navigator.clipboard.writeText('${url}').then(()=>toast('URL copied!'))">Copy URL</button>
+        <a href="${url}" target="_blank" class="btn btn-sm btn-secondary">Open in Browser</a>
+        <a href="vlc://${url}" class="btn btn-sm btn-secondary">Open in VLC</a>
+      </div>
+      <p style="color:var(--muted);font-size:11px;margin-top:8px">
+        Note: Browser playback requires HLS support. For best results use VLC or copy the URL into your media player.
+      </p>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) {
+      const v = overlay.querySelector('video');
+      if (v) { v.pause(); v.src = ''; }
+      overlay.remove();
+    }
+  });
+}
+
+// 
+//  Channel Maps  --  Smart Stream Mapping
+// 
+
+let _maps        = [];
+let _mapSettings = { market_type: '', market_name: '' }; // global market context
+
+async function renderMaps() {
+  const tb = document.getElementById('topbar-actions');
+  tb.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px">
+      <select id="global-market-type" onchange="_saveMarketCtx()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit">
+        <option value="">Any Market</option>
+        <option value="OTA">OTA</option>
+        <option value="SAT">Satellite</option>
+        <option value="Cable">Cable</option>
+      </select>
+      <input id="global-market-name" placeholder="Market (e.g. Chicago)" oninput="_saveMarketCtx()"
+        style="width:140px;padding:5px 9px;border:1px solid var(--border2);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit">
+      <button class="btn btn-secondary btn-sm" onclick="showImportMapM3UModal()">Import M3U</button>
+      <button class="btn btn-primary" onclick="showCreateMapModal()">+ New Map</button>
+    </div>
+  `;
+  // Restore saved market context
+  try {
+    const saved = JSON.parse(localStorage.getItem('tvnow_marketCtx') || '{}');
+    if (saved.market_type) { document.getElementById('global-market-type').value = saved.market_type; _mapSettings.market_type = saved.market_type; }
+    if (saved.market_name) { document.getElementById('global-market-name').value = saved.market_name; _mapSettings.market_name = saved.market_name; }
+  } catch(_) {}
+
+  _maps = await api('/api/channel-maps');
+  _renderMapList();
+}
+
+function _saveMarketCtx() {
+  _mapSettings.market_type = document.getElementById('global-market-type')?.value || '';
+  _mapSettings.market_name = document.getElementById('global-market-name')?.value || '';
+  try { localStorage.setItem('tvnow_marketCtx', JSON.stringify(_mapSettings)); } catch(_) {}
+}
+
+function _renderMapList() {
+  const c = document.getElementById('content');
+  if (!_maps.length) {
+    c.innerHTML = `<div class="empty-state">
+      <div class="icon">⇄</div>
+      <h3>No Channel Maps</h3>
+      <p>Maps let you combine multiple source streams for the same channel with automatic failover.</p>
+      <div style="margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-secondary" onclick="showImportMapM3UModal()">Import M3U</button>
+        <button class="btn btn-primary" onclick="showCreateMapModal()">+ New Map</button>
+      </div>
+    </div>`;
+    return;
+  }
+  c.innerHTML = _maps.map(m => _renderMapCard(m)).join('');
+  requestAnimationFrame(() => _loadAllEpgStrips());
+}
+
+function _renderMapCard(m) {
+  const memberRows = (m.members || []).map((mb, i) => `
+    <div class="map-member ${mb.enabled ? '' : 'disabled'}">
+      <span class="priority-badge">${i + 1}</span>
+      ${mb.logo_url ? `<img class="ch-logo" style="width:28px;height:28px;object-fit:contain;border-radius:4px" src="${esc(mb.logo_url)}" onerror="this.style.display='none'">` : '<div style="width:28px"></div>'}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(mb.name)}</div>
+        <div style="font-size:11px;color:var(--muted)">${esc(mb.source_name)} &mdash; ${esc(mb.stream_type)}</div>
+      </div>
+      <div style="display:flex;gap:4px;align-items:center;flex-shrink:0">
+        ${i > 0 ? `<button class="btn btn-sm btn-secondary btn-icon" title="Move up" onclick="mapMemberMove(${m.id},${mb.channel_id},-1)">↑</button>` : '<span style="width:28px"></span>'}
+        ${i < (m.members.length - 1) ? `<button class="btn btn-sm btn-secondary btn-icon" title="Move down" onclick="mapMemberMove(${m.id},${mb.channel_id},1)">↓</button>` : '<span style="width:28px"></span>'}
+        <button class="btn btn-sm btn-secondary btn-icon" title="Test stream" onclick="playChannel(${mb.channel_id})">▶</button>
+        <button class="btn btn-sm btn-secondary btn-icon" style="color:var(--red)" title="Remove" onclick="mapMemberRemove(${m.id},${mb.channel_id})">✕</button>
+      </div>
+    </div>`).join('');
+
+  const streamUrl = `${window.location.origin}/stream/map/${m.id}`;
+  const epgBadge = m.epg_id
+    ? `<span class="map-meta-badge" title="EPG ID: ${esc(m.epg_id)}">◷ ${esc(m.epg_id)}</span>`
+    : `<span class="map-meta-badge muted" title="No EPG mapped">◷ No EPG</span>`;
+  const logoBadge = m.logo_url
+    ? `<img class="map-logo-thumb" src="${esc(m.logo_url)}" onerror="this.outerHTML='<span class=map-meta-badge>⬜ Custom URL</span>'">`
+    : `<span class="map-meta-badge muted">⬜ No Logo</span>`;
+  const marketBadge = (m.market_type || m.market_name)
+    ? `<span class="map-meta-badge" style="background:rgba(79,127,255,.1);border-color:rgba(79,127,255,.25);color:var(--accent)">${esc(m.market_type || '')}${m.market_name ? ' · ' + esc(m.market_name) : ''}</span>`
+    : '';
+
+  return `
+  <div class="card" style="margin-bottom:12px" id="map-card-${m.id}">
+    <div class="card-header">
+      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+        <div class="map-logo-wrap" onclick="showLogoPickerModal(${m.id})" title="Change logo">
+          ${m.logo_url
+            ? `<img src="${esc(m.logo_url)}" style="width:44px;height:44px;object-fit:contain;border-radius:8px;display:block" onerror="this.outerHTML='<div class=map-logo-placeholder>📺</div>'">`
+            : '<div class="map-logo-placeholder">📺</div>'}
+          <div class="map-logo-edit-hint"></div>
+        </div>
+        <div style="min-width:0;flex:1">
+          <div class="card-title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            ${esc(m.name)}
+            ${m.number ? `<span class="pill" style="font-family:'DM Mono',monospace">CH ${esc(m.number)}</span>` : ''}
+            ${m.enabled ? '' : '<span class="pill" style="color:var(--muted)">Disabled</span>'}
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap">
+            <button class="map-meta-btn" onclick="showLogoPickerModal(${m.id})">${logoBadge}</button>
+            <button class="map-meta-btn" onclick="showEpgPickerModal(${m.id})">${epgBadge}</button>
+            ${m.group_name ? `<span class="map-meta-badge muted">${esc(m.group_name)}</span>` : ''}
+            ${marketBadge}
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
+        <span class="pill">${(m.members||[]).length} source${(m.members||[]).length!==1?'s':''}</span>
+        <button class="btn btn-sm btn-primary" onclick="showSmartAddModal(${m.id})">+ Smart Add</button>
+        <button class="btn btn-sm btn-secondary" onclick="showEditMapModal(${m.id})">Edit</button>
+        <button class="btn btn-sm btn-secondary" onclick="mapToggle(${m.id})" title="${m.enabled?'Disable':'Enable'}">${m.enabled?'⏸':'▶'}</button>
+        <button class="btn btn-sm btn-secondary" onclick="mapCopyUrl(${m.id})" title="Copy stream URL">⎘ URL</button>
+        <button class="btn btn-sm btn-danger btn-icon" onclick="mapDelete(${m.id})" title="Delete">✕</button>
+      </div>
+    </div>
+
+    <div id="epg-strip-${m.id}" class="map-epg-strip" style="display:none"></div>
+
+    ${(m.members||[]).length ? `
+      <div style="padding:0 4px 4px">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;padding:0 8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">
+          Priority Order — first source tried, failover down the list
+        </div>
+        <div>${memberRows}</div>
+      </div>` :
+      `<div style="padding:12px 16px 10px;color:var(--muted);font-size:13px">No streams yet — <button class="btn btn-sm btn-primary" onclick="showSmartAddModal(${m.id})">+ Smart Add</button> to auto-match streams.</div>`}
+
+    <div style="padding:8px 16px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:10px;color:var(--muted);word-break:break-all;flex:1;font-family:'DM Mono',monospace">${streamUrl}</span>
+      <button class="btn btn-sm btn-secondary" onclick="playMapStream(${m.id})">▶ Test</button>
+    </div>
+  </div>`;
+}
+
+// ────────────────────────────────────────────────────────────────
+//  SMART ADD MODAL  -- the new heart of the mapping workflow
+// ────────────────────────────────────────────────────────────────
+async function showSmartAddModal(mapId) {
+  const m = _maps.find(x => x.id === mapId);
+  if (!m) return;
+
+  const overlayEl = document.createElement('div');
+  overlayEl.className = 'modal-overlay';
+  overlayEl.innerHTML = `
+    <div class="modal" style="max-width:700px;width:96%;max-height:88vh;display:flex;flex-direction:column;padding:0;overflow:hidden">
+      <div style="padding:18px 20px 14px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="modal-title">Smart Stream Matching — <span style="color:var(--accent)">${esc(m.name)}</span></div>
+          <button class="btn btn-icon btn-secondary" onclick="this.closest('.modal-overlay').remove()">✕</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center">
+          <div class="search-wrap" style="position:relative">
+            <span class="search-icon" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none">⌕</span>
+            <input id="smart-search" placeholder="Search channels (e.g. Discovery, CNN, WBBM)…"
+              style="width:100%;padding:8px 11px 8px 32px;border:1px solid var(--border2);border-radius:6px;background:var(--surface2);color:var(--text);font-size:13px;font-family:inherit;outline:none"
+              oninput="_smartSearchDebounce(${mapId})" value="${esc(m.name)}">
+          </div>
+          <select id="smart-market-type"
+            style="padding:7px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit"
+            onchange="_smartSearch(${mapId})">
+            <option value="">Any</option>
+            <option value="OTA" ${_mapSettings.market_type==='OTA'?'selected':''}>OTA</option>
+            <option value="SAT" ${_mapSettings.market_type==='SAT'?'selected':''}>Satellite</option>
+            <option value="Cable" ${_mapSettings.market_type==='Cable'?'selected':''}>Cable</option>
+          </select>
+          <input id="smart-market-name" placeholder="Market" value="${esc(_mapSettings.market_name)}"
+            style="width:110px;padding:7px 9px;border:1px solid var(--border2);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit"
+            oninput="_smartSearchDebounce(${mapId})">
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+          <div id="smart-epg-suggestion" style="font-size:11px;color:var(--muted)"></div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span id="smart-select-count" style="font-size:11px;color:var(--muted)">0 selected</span>
+            <button class="btn btn-primary btn-sm" id="smart-add-btn" onclick="_smartAddSelected(${mapId})" disabled>Add Selected</button>
+          </div>
+        </div>
+      </div>
+      <div id="smart-results" style="flex:1;overflow-y:auto;padding:8px 12px"></div>
+    </div>`;
+
+  document.body.appendChild(overlayEl);
+  overlayEl.addEventListener('click', e => { if (e.target === overlayEl) overlayEl.remove(); });
+  overlayEl._mapId    = mapId;
+  overlayEl._selected = new Set();
+
+  setTimeout(() => {
+    document.getElementById('smart-search')?.focus();
+    _smartSearch(mapId);
+  }, 60);
+}
+
+let _smartDebounceTimer = null;
+function _smartSearchDebounce(mapId) {
+  clearTimeout(_smartDebounceTimer);
+  _smartDebounceTimer = setTimeout(() => _smartSearch(mapId), 300);
+}
+
+async function _smartSearch(mapId) {
+  const overlayEl = document.querySelector('.modal-overlay');
+  if (!overlayEl || overlayEl._mapId !== mapId) return;
+
+  const name       = document.getElementById('smart-search')?.value?.trim() || '';
+  const marketType = document.getElementById('smart-market-type')?.value || '';
+  const marketName = document.getElementById('smart-market-name')?.value?.trim() || '';
+  const results    = document.getElementById('smart-results');
+  if (!results) return;
+
+  if (!name) {
+    results.innerHTML = `<div class="empty-state" style="padding:30px 20px"><p>Type a channel name to search…</p></div>`;
+    return;
+  }
+
+  results.innerHTML = `<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Searching…</div>`;
+
+  try {
+    const params = new URLSearchParams({ name, market_type: marketType, market_name: marketName, map_id: mapId });
+    const data   = await api(`/api/channel-maps/suggest-streams?${params}`);
+
+    // EPG suggestion banner
+    const epgDiv = document.getElementById('smart-epg-suggestion');
+    if (epgDiv && data.epg?.length) {
+      const top = data.epg[0];
+      epgDiv.innerHTML = `<span style="color:var(--text-dim)">Suggested EPG:</span> 
+        <button onclick="_applyEpgSuggestion(${mapId},'${esc(top.epg_id)}')" 
+          style="background:none;border:1px solid var(--border2);border-radius:5px;padding:2px 7px;cursor:pointer;color:var(--accent);font-size:11px;font-family:'DM Mono',monospace">
+          ${esc(top.epg_id)}
+        </button>
+        <span style="color:var(--muted);font-size:10px">${top.confidence}% match</span>
+        ${data.epg.length > 1 ? `<button onclick="showEpgPickerModal(${mapId})" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;margin-left:4px">+${data.epg.length-1} more</button>` : ''}`;
+    } else if (epgDiv) {
+      epgDiv.innerHTML = '';
+    }
+
+    if (!data.streams?.length) {
+      results.innerHTML = `<div class="empty-state" style="padding:30px 20px"><p>No matching streams found. Try a different search term.</p></div>`;
+      return;
+    }
+
+    // Group by source
+    const bySource = {};
+    for (const ch of data.streams) {
+      const key = ch.source_name;
+      if (!bySource[key]) bySource[key] = { color: ch.source_color, channels: [] };
+      bySource[key].channels.push(ch);
+    }
+
+    const selected = overlayEl._selected;
+
+    results.innerHTML = Object.entries(bySource).map(([srcName, grp]) => `
+      <div style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;padding:2px 0">
+          <span style="width:8px;height:8px;border-radius:50%;background:${grp.color||'var(--muted)'};flex-shrink:0;display:inline-block"></span>
+          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)">${esc(srcName)}</span>
+          <button onclick="_selectAllFromSource('${esc(srcName)}')" style="background:none;border:none;cursor:pointer;font-size:10px;color:var(--accent);padding:0 4px;font-family:inherit">Select All</button>
+        </div>
+        ${grp.channels.map(ch => {
+          const isSelected = selected.has(ch.id);
+          const conf       = ch.confidence;
+          const confColor  = conf >= 90 ? 'var(--green)' : conf >= 70 ? 'var(--amber)' : 'var(--red)';
+          const confLabel  = conf >= 90 ? 'High' : conf >= 70 ? 'Review' : 'Uncertain';
+          return `
+          <div class="smart-candidate ${isSelected ? 'selected' : ''}" data-id="${ch.id}" data-source="${esc(ch.source_name)}" onclick="_toggleCandidate(${ch.id},${mapId})"
+            style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;border:1px solid ${isSelected ? 'var(--accent)' : 'var(--border)'};background:${isSelected ? 'var(--accent-glow)' : 'var(--surface2)'};cursor:pointer;margin-bottom:4px;transition:all .12s">
+            <div style="width:18px;height:18px;border-radius:4px;border:1.5px solid ${isSelected ? 'var(--accent)' : 'var(--border2)'};background:${isSelected ? 'var(--accent)' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;color:#fff;transition:all .12s">
+              ${isSelected ? '✓' : ''}
+            </div>
+            ${ch.logo_url ? `<img src="${esc(ch.logo_url)}" style="width:32px;height:32px;object-fit:contain;border-radius:5px;flex-shrink:0" onerror="this.style.display='none'">` : '<div style="width:32px;height:32px;border-radius:5px;background:var(--surface3);flex-shrink:0"></div>'}
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(ch.name)}</div>
+              <div style="font-size:11px;color:var(--muted);display:flex;gap:8px;margin-top:1px">
+                <span>${esc(ch.stream_type)}</span>
+                ${ch.number ? `<span>CH ${esc(ch.number)}</span>` : ''}
+                ${ch.group_name ? `<span>${esc(ch.group_name)}</span>` : ''}
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
+              <span style="font-size:10px;font-weight:700;font-family:'DM Mono',monospace;color:${confColor}">${conf}%</span>
+              <span style="font-size:9px;color:${confColor};text-transform:uppercase;letter-spacing:.4px">${confLabel}</span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    `).join('');
+
+    _updateSmartCount();
+  } catch (err) {
+    results.innerHTML = `<div class="empty-state" style="padding:20px"><p style="color:var(--red)">${esc(err.message)}</p></div>`;
+  }
+}
+
+function _toggleCandidate(channelId, mapId) {
+  const overlayEl = document.querySelector('.modal-overlay');
+  if (!overlayEl || overlayEl._mapId !== mapId) return;
+
+  if (overlayEl._selected.has(channelId)) {
+    overlayEl._selected.delete(channelId);
+  } else {
+    // Check if this is < 70% confidence -- ask for confirmation
+    const el      = document.querySelector(`.smart-candidate[data-id="${channelId}"]`);
+    const confTxt = el?.querySelector('[style*="DM Mono"]')?.textContent?.trim() || '100%';
+    const conf    = parseInt(confTxt);
+    if (conf < 70 && !overlayEl._selected.has(channelId)) {
+      const chName = el?.querySelector('[style*="font-weight:600"]')?.textContent?.trim() || 'this channel';
+      if (!confirm(`Match confidence is ${conf}% — this may not be the right stream.\n\nAdd "${chName}" anyway?`)) return;
+    }
+    overlayEl._selected.add(channelId);
+  }
+
+  // Update visual state
+  const el = document.querySelector(`.smart-candidate[data-id="${channelId}"]`);
+  if (el) {
+    const isNowSelected = overlayEl._selected.has(channelId);
+    el.style.border    = `1px solid ${isNowSelected ? 'var(--accent)' : 'var(--border)'}`;
+    el.style.background = isNowSelected ? 'var(--accent-glow)' : 'var(--surface2)';
+    const box = el.querySelector('div[style*="border-radius:4px"]');
+    if (box) {
+      box.style.border     = `1.5px solid ${isNowSelected ? 'var(--accent)' : 'var(--border2)'}`;
+      box.style.background = isNowSelected ? 'var(--accent)' : 'transparent';
+      box.textContent      = isNowSelected ? '✓' : '';
+    }
+  }
+  _updateSmartCount();
+}
+
+function _selectAllFromSource(sourceName) {
+  const overlayEl = document.querySelector('.modal-overlay');
+  if (!overlayEl) return;
+  document.querySelectorAll(`.smart-candidate[data-source="${CSS.escape(sourceName)}"]`).forEach(el => {
+    const id = parseInt(el.dataset.id);
+    overlayEl._selected.add(id);
+    el.style.border     = '1px solid var(--accent)';
+    el.style.background = 'var(--accent-glow)';
+    const box = el.querySelector('div[style*="border-radius:4px"]');
+    if (box) { box.style.border = '1.5px solid var(--accent)'; box.style.background = 'var(--accent)'; box.textContent = '✓'; }
+  });
+  _updateSmartCount();
+}
+
+function _updateSmartCount() {
+  const overlayEl = document.querySelector('.modal-overlay');
+  if (!overlayEl) return;
+  const n = overlayEl._selected?.size || 0;
+  const countEl = document.getElementById('smart-select-count');
+  const addBtn  = document.getElementById('smart-add-btn');
+  if (countEl) countEl.textContent = `${n} selected`;
+  if (addBtn)  addBtn.disabled = n === 0;
+}
+
+async function _smartAddSelected(mapId) {
+  const overlayEl = document.querySelector('.modal-overlay');
+  if (!overlayEl || overlayEl._mapId !== mapId) return;
+  const ids = [...(overlayEl._selected || [])];
+  if (!ids.length) return;
+
+  const btn = document.getElementById('smart-add-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Adding…'; }
+
+  let added = 0, failed = 0;
+  for (const channelId of ids) {
+    try {
+      await api(`/api/channel-maps/${mapId}/members`, {
+        method: 'POST', body: JSON.stringify({ channel_id: channelId }),
+      });
+      added++;
+    } catch (err) {
+      if (!err.message.includes('already')) failed++;
+    }
+  }
+
+  overlayEl.remove();
+  toast(`Added ${added} stream${added !== 1 ? 's' : ''}${failed ? ` (${failed} failed)` : ''} to map`);
+  _maps = await api('/api/channel-maps');
+  _renderMapList();
+  requestAnimationFrame(() => _loadAllEpgStrips());
+}
+
+async function _applyEpgSuggestion(mapId, epgId) {
+  try {
+    await api(`/api/channel-maps/${mapId}`, { method: 'PUT', body: JSON.stringify({ epg_id: epgId }) });
+    const m = _maps.find(x => x.id === mapId);
+    if (m) m.epg_id = epgId;
+    toast(`EPG set to ${epgId}`);
+    // Re-render just the map card
+    const cardEl = document.getElementById(`map-card-${mapId}`);
+    if (cardEl) cardEl.outerHTML = _renderMapCard(_maps.find(x => x.id === mapId) || {});
+    // Close the smart add modal if open
+    document.querySelector('.modal-overlay')?.remove();
+    _maps = await api('/api/channel-maps');
+    _renderMapList();
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+// ────────────────────────────────────────────────────────────────
+//  Map member move / remove
+// ────────────────────────────────────────────────────────────────
+async function mapMemberMove(mapId, channelId, dir) {
+  const m       = _maps.find(x => x.id === mapId);
+  if (!m) return;
+  const idx     = m.members.findIndex(mb => mb.channel_id === channelId);
+  const newIdx  = idx + dir;
+  if (newIdx < 0 || newIdx >= m.members.length) return;
+  const order   = m.members.map(mb => mb.channel_id);
+  order.splice(newIdx, 0, order.splice(idx, 1)[0]);
+  await api(`/api/channel-maps/${mapId}/members/reorder`, { method: 'PUT', body: JSON.stringify({ order }) });
+  m.members.sort((a, b) => order.indexOf(a.channel_id) - order.indexOf(b.channel_id));
+  const cardEl = document.getElementById(`map-card-${mapId}`);
+  if (cardEl) cardEl.outerHTML = _renderMapCard(m);
+  _loadEpgStrip(mapId);
+}
+
+async function mapMemberRemove(mapId, channelId) {
+  await api(`/api/channel-maps/${mapId}/members/${channelId}`, { method: 'DELETE' });
+  const m = _maps.find(x => x.id === mapId);
+  if (m) m.members = m.members.filter(mb => mb.channel_id !== channelId);
+  const cardEl = document.getElementById(`map-card-${mapId}`);
+  if (cardEl) cardEl.outerHTML = _renderMapCard(m || {});
+}
+
+function mapCopyUrl(id) {
+  const url = `${window.location.origin}/stream/map/${id}`;
+  navigator.clipboard.writeText(url).then(() => toast('Stream URL copied'));
+}
+
+function playMapStream(id) {
+  playChannel(`map/${id}`);
+}
+
+async function mapToggle(id) {
+  await api(`/api/channel-maps/${id}/toggle`, { method: 'POST' });
+  const m = _maps.find(x => x.id === id);
+  if (m) m.enabled = m.enabled ? 0 : 1;
+  _renderMapList();
+}
+
+async function mapDelete(id) {
+  const m = _maps.find(x => x.id === id);
+  if (!confirm(`Delete map "${m?.name || id}"? This cannot be undone.`)) return;
+  await api(`/api/channel-maps/${id}`, { method: 'DELETE' });
+  _maps = _maps.filter(x => x.id !== id);
+  _renderMapList();
+}
+
+// ────────────────────────────────────────────────────────────────
+//  Create / Edit map modals
+// ────────────────────────────────────────────────────────────────
+function showCreateMapModal() {
+  modal(`
+    <div class="modal-header"><div class="modal-title">New Channel Map</div><button class="btn btn-icon btn-secondary" onclick="this.closest('.modal-overlay').remove()">✕</button></div>
+    <div style="display:grid;gap:12px">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:5px">Channel Name *</label>
+        <input id="map-name" class="inp" placeholder="e.g. Discovery Channel" style="width:100%" oninput="_liveMapNameHint()">
+        <div id="map-name-hint" style="font-size:10px;color:var(--muted);margin-top:4px"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:5px">Channel Number</label>
+          <input id="map-number" class="inp" placeholder="202">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:5px">Group / Category</label>
+          <input id="map-group" class="inp" placeholder="Entertainment">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:5px">Market Type</label>
+          <select id="map-market-type" class="inp" style="padding:7px 10px" onchange="_liveMapNameHint()">
+            <option value="">— Any —</option>
+            <option value="OTA"   ${_mapSettings.market_type==='OTA'?'selected':''}>OTA (Antenna)</option>
+            <option value="SAT"   ${_mapSettings.market_type==='SAT'?'selected':''}>Satellite</option>
+            <option value="Cable" ${_mapSettings.market_type==='Cable'?'selected':''}>Cable</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:5px">Market / City</label>
+          <input id="map-market-name" class="inp" placeholder="e.g. Chicago" value="${esc(_mapSettings.market_name)}" oninput="_liveMapNameHint()">
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:5px">Logo URL</label>
+        <input id="map-logo" class="inp" placeholder="https://…/logo.png">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:5px">EPG ID (tvg-id)</label>
+        <input id="map-epg" class="inp" placeholder="DISC.us">
+        <div id="map-epg-hint" style="font-size:10px;color:var(--muted);margin-top:4px">Will auto-suggest after you type the channel name.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary" onclick="createMap()">Create & Match Streams</button>
+    </div>
+  `);
+  setTimeout(() => document.getElementById('map-name')?.focus(), 50);
+}
+
+let _liveHintTimer = null;
+async function _liveMapNameHint() {
+  clearTimeout(_liveHintTimer);
+  _liveHintTimer = setTimeout(async () => {
+    const name       = document.getElementById('map-name')?.value?.trim() || '';
+    const marketType = document.getElementById('map-market-type')?.value || '';
+    const marketName = document.getElementById('map-market-name')?.value?.trim() || '';
+    const hint       = document.getElementById('map-name-hint');
+    const epgHint    = document.getElementById('map-epg-hint');
+    if (!name || name.length < 3) return;
+
+    try {
+      const params = new URLSearchParams({ name, market_type: marketType, market_name: marketName });
+      const data   = await api(`/api/channel-maps/suggest-streams?${params}`);
+      if (hint) {
+        hint.innerHTML = data.streams?.length
+          ? `<span style="color:var(--green)">✓ Found ${data.streams.length} potential stream${data.streams.length!==1?'s':''}</span> — you'll select them after creation`
+          : `<span style="color:var(--muted)">No streams found yet — add sources first</span>`;
+      }
+      if (epgHint && data.epg?.length) {
+        const top = data.epg[0];
+        epgHint.innerHTML = `Suggested: <button onclick="document.getElementById('map-epg').value='${esc(top.epg_id)}';this.parentElement.textContent='Set to '+${jsq(top.epg_id)}" style="background:none;border:1px solid var(--border2);border-radius:4px;padding:1px 6px;cursor:pointer;color:var(--accent);font-size:10px;font-family:'DM Mono',monospace">${esc(top.epg_id)}</button> <span style="color:var(--muted)">${top.confidence}% match</span>`;
+      }
+    } catch (_) {}
+  }, 400);
+}
+
+async function createMap() {
+  const name        = document.getElementById('map-name').value.trim();
+  const number      = document.getElementById('map-number').value.trim();
+  const group       = document.getElementById('map-group').value.trim();
+  const logo_url    = document.getElementById('map-logo').value.trim();
+  const epg_id      = document.getElementById('map-epg').value.trim();
+  const market_type = document.getElementById('map-market-type').value;
+  const market_name = document.getElementById('map-market-name').value.trim();
+  if (!name) { toast('Name is required', 'error'); return; }
+
+  const result = await api('/api/channel-maps', {
+    method: 'POST',
+    body: JSON.stringify({ name, number: number||null, group_name: group||null, logo_url: logo_url||null, epg_id: epg_id||null, market_type: market_type||null, market_name: market_name||null }),
+  });
+  document.querySelector('.modal-overlay')?.remove();
+  _maps = await api('/api/channel-maps');
+  _renderMapList();
+
+  // Immediately open Smart Add for the new map
+  if (result.id) {
+    // Update market context from what was entered
+    if (market_type) _mapSettings.market_type = market_type;
+    if (market_name) _mapSettings.market_name = market_name;
+    await showSmartAddModal(result.id);
+  }
+}
+
+function showEditMapModal(id) {
+  const m = _maps.find(x => x.id === id);
+  if (!m) return;
+  modal(`
+    <div class="modal-header"><div class="modal-title">Edit: ${esc(m.name)}</div><button class="btn btn-icon btn-secondary" onclick="this.closest('.modal-overlay').remove()">✕</button></div>
+    <div style="display:grid;gap:12px">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:5px">Name *</label>
+        <input id="emap-name" class="inp" value="${esc(m.name)}" style="width:100%">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:5px">Channel Number</label>
+          <input id="emap-number" class="inp" value="${esc(m.number||'')}">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:5px">Group / Category</label>
+          <input id="emap-group" class="inp" value="${esc(m.group_name||'')}">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:5px">Market Type</label>
+          <select id="emap-market-type" class="inp" style="padding:7px 10px">
+            <option value="">— Any —</option>
+            <option value="OTA"   ${m.market_type==='OTA'?'selected':''}>OTA (Antenna)</option>
+            <option value="SAT"   ${m.market_type==='SAT'?'selected':''}>Satellite</option>
+            <option value="Cable" ${m.market_type==='Cable'?'selected':''}>Cable</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:5px">Market / City</label>
+          <input id="emap-market-name" class="inp" value="${esc(m.market_name||'')}" placeholder="e.g. Chicago">
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:5px">Logo URL</label>
+        <input id="emap-logo" class="inp" value="${esc(m.logo_url||'')}">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:5px">EPG ID (tvg-id)</label>
+        <input id="emap-epg" class="inp" value="${esc(m.epg_id||'')}">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditMap(${id})">Save</button>
+    </div>
+  `);
+}
+
+async function saveEditMap(id) {
+  const name        = document.getElementById('emap-name').value.trim();
+  const number      = document.getElementById('emap-number').value.trim();
+  const group       = document.getElementById('emap-group').value.trim();
+  const logo_url    = document.getElementById('emap-logo').value.trim();
+  const epg_id      = document.getElementById('emap-epg').value.trim();
+  const market_type = document.getElementById('emap-market-type').value;
+  const market_name = document.getElementById('emap-market-name').value.trim();
+  if (!name) { toast('Name is required', 'error'); return; }
+  await api(`/api/channel-maps/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ name, number: number||null, group_name: group||null, logo_url: logo_url||null, epg_id: epg_id||null, market_type: market_type||null, market_name: market_name||null }),
+  });
+  document.querySelector('.modal-overlay')?.remove();
+  _maps = await api('/api/channel-maps');
+  _renderMapList();
+}
+
+// ────────────────────────────────────────────────────────────────
+//  Import M3U modal (kept from original)
+// ────────────────────────────────────────────────────────────────
+function showImportMapM3UModal() {
+  modal(`
+    <div class="modal-header"><div class="modal-title">Import Channel Maps from M3U</div><button class="btn btn-icon btn-secondary" onclick="this.closest('.modal-overlay').remove()">✕</button></div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Paste an M3U playlist. Channel maps will be created from the channel names — streams won't be added automatically (use Smart Add after).</p>
+    <div class="form-group">
+      <label>M3U Playlist Text</label>
+      <textarea id="import-m3u-text" style="min-height:160px;font-family:'DM Mono',monospace;font-size:11px" placeholder="#EXTM3U&#10;#EXTINF:-1 tvg-id=&quot;CNN.us&quot; tvg-name=&quot;CNN&quot;,CNN&#10;http://example.com/cnn"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary" onclick="doImportMapM3U()">Import</button>
+    </div>
+  `);
+}
+
+async function doImportMapM3U() {
+  const text = document.getElementById('import-m3u-text')?.value?.trim();
+  if (!text) return toast('Paste an M3U first', 'error');
+  try {
+    const res = await api('/api/channel-maps/import-m3u', {
+      method: 'POST', body: JSON.stringify({ text }),
+    });
+    document.querySelector('.modal-overlay')?.remove();
+    toast(`Imported ${res.created} map(s)` + (res.skipped ? ` — skipped ${res.skipped}` : ''));
+    _maps = await api('/api/channel-maps');
+    _renderMapList();
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+// ────────────────────────────────────────────────────────────────
+//  EPG strip loader (unchanged from original)
+// ────────────────────────────────────────────────────────────────
+async function _loadEpgStrip(mapId) {
+  const m = _maps.find(x => x.id === mapId);
+  if (!m?.epg_id) return;
+  const strip = document.getElementById(`epg-strip-${mapId}`);
+  if (!strip) return;
+  try {
+    const now  = Math.floor(Date.now() / 1000);
+    const rows = await api(`/api/epg/guide?epg_id=${encodeURIComponent(m.epg_id)}&from=${now - 600}&to=${now + 4 * 3600}`);
+    if (!rows.length) { strip.style.display = 'none'; return; }
+    const fmtTime = ts => new Date(ts * 1000).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+    strip.style.display = 'flex';
+    strip.innerHTML = rows.slice(0, 6).map(r => {
+      const isCurrent = r.start_time <= now && r.end_time > now;
+      const pct = isCurrent ? Math.round((now - r.start_time) / (r.end_time - r.start_time) * 100) : 0;
+      return `
+        <div class="epg-slot ${isCurrent ? 'current' : ''}">
+          <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">${fmtTime(r.start_time)}</div>
+          <div style="font-size:12px;font-weight:${isCurrent?600:400};white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(r.title)}">${esc(r.title)}</div>
+          ${isCurrent ? `<div class="epg-progress"><div class="epg-progress-fill" style="width:${pct}%"></div></div>` : ''}
+        </div>`;
+    }).join('');
+  } catch (_) { strip.style.display = 'none'; }
+}
+
+function _loadAllEpgStrips() {
+  for (const m of _maps) {
+    if (m.epg_id) _loadEpgStrip(m.id);
+  }
+}
+
+
+
+
+async function showAddMemberModal(mapId) {
+  const m = _maps.find(x => x.id === mapId);
+  const [allChannels, sources] = await Promise.all([api('/api/channels'), api('/api/sources')]);
+  const srcMap = {};
+  for (const s of sources) srcMap[s.id] = s;
+  const existingIds = new Set((m?.members || []).map(mb => mb.channel_id));
+
+  const overlayEl = document.createElement('div');
+  overlayEl.className = 'modal-overlay';
+  overlayEl.innerHTML = `
+    <div class="modal" style="max-width:640px;width:95%;max-height:80vh;display:flex;flex-direction:column">
+      <div class="modal-header">
+        <div class="modal-title"> Add Channels to "${esc(m?.name || mapId)}"</div>
+        <button class="btn btn-icon btn-secondary" onclick="this.closest('.modal-overlay').remove()"></button>
+      </div>
+      <input id="add-member-search" class="inp" placeholder="Search channels" style="width:100%;margin-bottom:10px" oninput="_filterAddMemberList()">
+      <div id="add-member-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:2px"></div>
+    </div>`;
+  document.body.appendChild(overlayEl);
+  overlayEl.addEventListener('click', e => { if (e.target === overlayEl) overlayEl.remove(); });
+
+  overlayEl._allChannels = allChannels;
+  overlayEl._existingIds = existingIds;
+  overlayEl._srcMap      = srcMap;
+  overlayEl._mapId       = mapId;
+
+  _filterAddMemberList();
+  setTimeout(() => document.getElementById('add-member-search')?.focus(), 50);
+}
+
+function _filterAddMemberList() {
+  const overlayEl = document.querySelector('.modal-overlay');
+  if (!overlayEl?._allChannels) return;
+  const { _allChannels, _existingIds, _srcMap, _mapId } = overlayEl;
+  const q = (document.getElementById('add-member-search')?.value || '').toLowerCase();
+
+  const filtered = _allChannels.filter(ch => {
+    const src = _srcMap[ch.source_id];
+    return !q || `${ch.name} ${src?.name||''} ${ch.group_name||''}`.toLowerCase().includes(q);
+  });
+
+  const list = document.getElementById('add-member-list');
+  if (!list) return;
+
+  if (!filtered.length) {
+    list.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px">No channels found</div>';
+    return;
+  }
+
+  const bySource = {};
+  for (const ch of filtered) {
+    const key = _srcMap[ch.source_id]?.name || 'Unknown';
+    if (!bySource[key]) bySource[key] = [];
+    bySource[key].push(ch);
+  }
+
+  list.innerHTML = Object.entries(bySource).map(([srcName, chs]) => `
+    <div style="margin-bottom:10px">
+      <div style="font-size:11px;color:var(--muted);font-weight:600;padding:4px 2px 6px;text-transform:uppercase;letter-spacing:.5px">${esc(srcName)}</div>
+      ${chs.map(ch => {
+        const already = _existingIds.has(ch.id);
+        return `
+          <div class="map-member" style="opacity:${already?'.5':'1'}">
+            ${ch.logo_url ? `<img style="width:28px;height:28px;object-fit:contain;border-radius:4px" src="${esc(ch.logo_url)}" onerror="this.style.display='none'">` : '<div style="width:28px"></div>'}
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(ch.name)}</div>
+              <div style="font-size:11px;color:var(--muted)">${ch.number?`CH ${esc(ch.number)} - `:''}${esc(ch.stream_type)}</div>
+            </div>
+            <button class="btn btn-sm ${already?'btn-secondary':'btn-primary'}" ${already?'disabled':''} onclick="_addMember(${_mapId},${ch.id},this)">
+              ${already ? 'Added' : ' Add'}
+            </button>
+          </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+async function _addMember(mapId, channelId, btn) {
+  btn.disabled = true; btn.textContent = '';
+  try {
+    await api(`/api/channel-maps/${mapId}/members`, {
+      method: 'POST', body: JSON.stringify({ channel_id: channelId }),
+    });
+    btn.textContent = 'Added';
+    btn.className = 'btn btn-sm btn-secondary';
+
+    const overlayEl = document.querySelector('.modal-overlay');
+    if (overlayEl?._existingIds) overlayEl._existingIds.add(channelId);
+
+    // Refresh local map state
+    _maps = await api('/api/channel-maps');
+    toast('Channel added to map');
+  } catch (err) {
+    btn.disabled = false; btn.textContent = ' Add';
+    toast(err.message || 'Failed to add', 'error');
+  }
+}
+
+
+// 
+//  EPG Picker Modal
+// 
+
+async function showEpgPickerModal(mapId) {
+  const m = _maps.find(x => x.id === mapId);
+
+  const overlayEl = document.createElement('div');
+  overlayEl.className = 'modal-overlay';
+  overlayEl.innerHTML = `
+    <div class="modal" style="max-width:660px;width:95%;max-height:85vh;display:flex;flex-direction:column">
+      <div class="modal-header">
+        <div class="modal-title">... EPG Mapping  ${esc(m?.name || mapId)}</div>
+        <button class="btn btn-icon btn-secondary" onclick="this.closest('.modal-overlay').remove()"></button>
+      </div>
+
+      ${(m?.members||[]).some(mb => mb.epg_id) ? `
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">From member channels</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${[...new Set((m.members||[]).filter(mb=>mb.epg_id).map(mb=>mb.epg_id))].map(eid => `
+              <button class="btn btn-sm ${m.epg_id===eid?'btn-primary':'btn-secondary'}"
+                onclick='_setMapEpg(${mapId}, ${jsq(eid)})'>${esc(eid)}</button>
+            `).join('')}
+          </div>
+        </div>` : ''}
+
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <input id="epg-search" class="inp" placeholder="Search EPG IDs" style="flex:1" oninput="_filterEpgList(${mapId})">
+        ${m?.epg_id ? `<button class="btn btn-sm btn-secondary" style="color:var(--red)" onclick="_setMapEpg(${mapId},null)"> Clear</button>` : ''}
+      </div>
+
+      <div id="epg-search-results" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:3px">
+        <div style="color:var(--muted);font-size:12px;padding:8px">Type to search EPG IDs</div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlayEl);
+  overlayEl.addEventListener('click', e => { if (e.target === overlayEl) overlayEl.remove(); });
+  overlayEl._mapId = mapId;
+
+  // Pre-load with top results
+  setTimeout(() => {
+    document.getElementById('epg-search')?.focus();
+    _filterEpgList(mapId);
+  }, 50);
+}
+
+let _epgSearchTimer = null;
+function _filterEpgList(mapId) {
+  clearTimeout(_epgSearchTimer);
+  _epgSearchTimer = setTimeout(async () => {
+    const q       = (document.getElementById('epg-search')?.value || '').trim();
+    const results = document.getElementById('epg-search-results');
+    if (!results) return;
+    const m = _maps.find(x => x.id === mapId);
+
+    results.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px">Loading</div>';
+
+    try {
+      const rows = await api(`/api/epg/ids?q=${encodeURIComponent(q)}&limit=40`);
+      if (!rows.length) {
+        results.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px">No matching EPG IDs found</div>';
+        return;
+      }
+      const fmtTime = ts => ts ? new Date(ts * 1000).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }) : '';
+      results.innerHTML = rows.map(r => {
+        const isCurrent = m?.epg_id === r.epg_id;
+        const nowText   = r.now_title  ? `<span style="color:var(--green)">- ${esc(r.now_title)} (${fmtTime(r.now_start)}${fmtTime(r.now_end)})</span>` : '';
+        const nextText  = r.next_title ? `<span style="color:var(--muted)">Next: ${esc(r.next_title)} @ ${fmtTime(r.next_start)}</span>` : '';
+        return `
+          <div class="epg-result-row ${isCurrent ? 'active' : ''}" onclick='_setMapEpg(${mapId}, ${jsq(r.epg_id)})'>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:${isCurrent?700:500}">${esc(r.epg_id)}</div>
+              <div style="display:flex;flex-direction:column;gap:2px;margin-top:2px">
+                ${nowText}
+                ${nextText}
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0">
+              <span style="font-size:10px;color:var(--muted)">${r.program_count} programs</span>
+              ${isCurrent ? '<span style="font-size:10px;color:var(--accent);font-weight:700"> Selected</span>' : ''}
+            </div>
+          </div>`;
+      }).join('');
+    } catch (err) {
+      results.innerHTML = `<div style="color:var(--red);font-size:12px;padding:8px">${esc(err.message)}</div>`;
+    }
+  }, 220);
+}
+
+async function _setMapEpg(mapId, epgId) {
+  await api(`/api/channel-maps/${mapId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ epg_id: epgId }),
+  });
+  const m = _maps.find(x => x.id === mapId);
+  if (m) m.epg_id = epgId;
+  document.querySelector('.modal-overlay')?.remove();
+  _renderMapList();
+  toast(epgId ? `EPG set to ${epgId}` : 'EPG cleared');
+}
+
+// 
+//  Logo Picker Modal
+// 
+
+async function showLogoPickerModal(mapId) {
+  const m = _maps.find(x => x.id === mapId);
+
+  // Collect logos from member channels (deduplicated)
+  const memberLogos = [...new Map(
+    (m?.members || []).filter(mb => mb.logo_url).map(mb => [mb.logo_url, { url: mb.logo_url, name: mb.name }])
+  ).values()];
+
+  const overlayEl = document.createElement('div');
+  overlayEl.className = 'modal-overlay';
+  overlayEl.innerHTML = `
+    <div class="modal" style="max-width:580px;width:95%">
+      <div class="modal-header">
+        <div class="modal-title">- Logo Mapping  ${esc(m?.name || mapId)}</div>
+        <button class="btn btn-icon btn-secondary" onclick="this.closest('.modal-overlay').remove()"></button>
+      </div>
+
+      ${memberLogos.length ? `
+        <div style="margin-bottom:16px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">From member channels</div>
+          <div style="display:flex;flex-wrap:wrap;gap:10px">
+            ${memberLogos.map(lg => `
+              <button class="logo-pick-btn ${m?.logo_url===lg.url?'active':''}"
+                onclick='_setMapLogo(${mapId}, ${jsq(lg.url)})'>
+                <img src="${esc(lg.url)}" title="${esc(lg.name)}"
+                  onerror="this.parentElement.style.display='none'"
+                  style="width:56px;height:56px;object-fit:contain;display:block">
+                <div style="font-size:10px;color:var(--muted);margin-top:3px;max-width:64px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(lg.name)}</div>
+              </button>`).join('')}
+          </div>
+        </div>` : ''}
+
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Custom URL</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="logo-url-input" class="inp" placeholder="https:///logo.png" style="flex:1"
+            value="${esc(m?.logo_url||'')}" oninput="_previewLogoUrl()">
+          <button class="btn btn-secondary" onclick="_applyCustomLogo(${mapId})">Apply</button>
+        </div>
+        <div id="logo-url-preview" style="margin-top:10px;display:flex;align-items:center;gap:10px;min-height:40px">
+          ${m?.logo_url ? `<img src="${esc(m.logo_url)}" id="logo-preview-img" style="width:64px;height:64px;object-fit:contain;border-radius:6px;border:1px solid var(--border)" onerror="this.style.opacity='.3'">
+          <span style="font-size:11px;color:var(--muted)">Current logo</span>` : ''}
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        ${m?.logo_url ? `<button class="btn btn-secondary" style="color:var(--red)" onclick="_setMapLogo(${mapId}, null)"> Clear Logo</button>` : ''}
+        <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Done</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlayEl);
+  overlayEl.addEventListener('click', e => { if (e.target === overlayEl) overlayEl.remove(); });
+  setTimeout(() => document.getElementById('logo-url-input')?.focus(), 50);
+}
+
+function _previewLogoUrl() {
+  const url = document.getElementById('logo-url-input')?.value.trim();
+  const preview = document.getElementById('logo-url-preview');
+  if (!preview) return;
+  if (!url) { preview.innerHTML = ''; return; }
+  preview.innerHTML = `<img src="${esc(url)}" id="logo-preview-img"
+    style="width:64px;height:64px;object-fit:contain;border-radius:6px;border:1px solid var(--border)"
+    onerror="this.style.opacity='.3'">
+    <span style="font-size:11px;color:var(--muted)">Preview</span>`;
+}
+
+async function _applyCustomLogo(mapId) {
+  const url = document.getElementById('logo-url-input')?.value.trim();
+  await _setMapLogo(mapId, url || null);
+}
+
+async function _setMapLogo(mapId, logoUrl) {
+  await api(`/api/channel-maps/${mapId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ logo_url: logoUrl }),
+  });
+  const m = _maps.find(x => x.id === mapId);
+  if (m) m.logo_url = logoUrl;
+  document.querySelector('.modal-overlay')?.remove();
+  _renderMapList();
+  toast(logoUrl ? 'Logo updated' : 'Logo cleared');
+}
+
+(function _injectMapStyles() {
+  const s = document.createElement('style');
+  s.textContent = `
+    .map-member {
+      display:flex; align-items:center; gap:8px;
+      padding:6px 8px; border-radius:6px;
+      background:var(--surface2); margin-bottom:3px;
+    }
+    .map-member.disabled { opacity:.45; }
+    .priority-badge {
+      font-size:10px; font-weight:700; color:var(--muted);
+      background:var(--border); border-radius:4px;
+      padding:2px 5px; min-width:20px; text-align:center; flex-shrink:0;
+    }
+
+    /* Logo wrap with hover edit hint */
+    .map-logo-wrap {
+      position:relative; cursor:pointer; flex-shrink:0;
+      width:44px; height:44px;
+    }
+    .map-logo-placeholder {
+      width:44px; height:44px; background:var(--surface2);
+      border-radius:8px; display:flex; align-items:center;
+      justify-content:center; font-size:20px;
+    }
+    .map-logo-edit-hint {
+      position:absolute; inset:0; background:rgba(0,0,0,.55);
+      border-radius:8px; display:flex; align-items:center;
+      justify-content:center; font-size:14px;
+      opacity:0; transition:opacity .15s;
+    }
+    .map-logo-wrap:hover .map-logo-edit-hint { opacity:1; }
+
+    /* Meta badges (EPG / logo) */
+    .map-meta-badge {
+      font-size:11px; padding:2px 7px; border-radius:4px;
+      background:var(--surface2); color:var(--text);
+      white-space:nowrap; display:inline-flex; align-items:center; gap:4px;
+    }
+    .map-meta-badge.muted { color:var(--muted); }
+    .map-logo-thumb {
+      width:18px; height:18px; object-fit:contain; border-radius:3px;
+      vertical-align:middle;
+    }
+    .map-meta-btn {
+      background:none; border:none; padding:0; cursor:pointer;
+      display:inline-flex; align-items:center;
+    }
+    .map-meta-btn:hover .map-meta-badge { background:var(--border); }
+
+    /* EPG strip under card header */
+    .map-epg-strip {
+      display:flex; gap:6px; padding:8px 12px; overflow-x:auto;
+      border-bottom:1px solid var(--border); scrollbar-width:thin;
+      background:var(--surface);
+    }
+    .epg-slot {
+      flex-shrink:0; min-width:130px; max-width:200px;
+      padding:6px 8px; border-radius:6px;
+      background:var(--surface2);
+    }
+    .epg-slot.current { background:color-mix(in srgb, var(--accent) 15%, var(--surface2)); }
+    .epg-progress {
+      margin-top:4px; height:3px; border-radius:2px;
+      background:var(--border); overflow:hidden;
+    }
+    .epg-progress-fill { height:100%; background:var(--accent); border-radius:2px; }
+
+    /* EPG search result rows */
+    .epg-result-row {
+      display:flex; align-items:flex-start; gap:10px;
+      padding:8px 10px; border-radius:6px; cursor:pointer;
+      background:var(--surface2); transition:background .1s;
+    }
+    .epg-result-row:hover { background:var(--border); }
+    .epg-result-row.active { background:color-mix(in srgb, var(--accent) 18%, var(--surface2)); }
+
+    /* Logo picker grid */
+    .logo-pick-btn {
+      background:var(--surface2); border:2px solid transparent;
+      border-radius:8px; padding:6px; cursor:pointer;
+      display:flex; flex-direction:column; align-items:center;
+      transition:border-color .15s;
+    }
+    .logo-pick-btn:hover { border-color:var(--border); }
+    .logo-pick-btn.active { border-color:var(--accent); }
+  `;
+  document.head.appendChild(s);
+})();
+
+
+function showDedupModal() {
+  // Build ranked source list for user to drag/reorder
+  const srcList = _sources.map((s, i) => ({ ...s, rank: i }));
+  modal(`
+    <div class="modal-header">
+      <div class="modal-title"> Deduplicate Channels by Source Ranking</div>
+      <button class="btn btn-icon btn-secondary" onclick="this.closest('.modal-overlay').remove()"></button>
+    </div>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:14px">
+      Duplicates are resolved by three criteria in order:
+      <ol style="margin:8px 0 0 18px;padding:0;color:var(--muted);font-size:12px;line-height:1.8">
+        <li><b style="color:var(--text)">Playlist rank</b>  drag sources below to set priority (top = kept first)</li>
+        <li><b style="color:var(--text)">EPG richness</b>  when rank ties, the channel with richer program data wins</li>
+        <li><b style="color:var(--text)">Channel name</b>  fuzzy matching controlled by the threshold slider</li>
+      </ol>
+    </p>
+    <div id="dedup-source-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
+      ${srcList.map((s, i) => `
+        <div class="dedup-src-row" data-id="${s.id}" draggable="true"
+             style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;cursor:grab">
+          <span style="color:var(--muted);font-size:18px;cursor:grab"></span>
+          <span class="src-dot" style="background:${s.color || '#3b82f6'}"></span>
+          <span style="flex:1;font-weight:500">${esc(s.name)}</span>
+          <span class="pill">${esc(s.type)}</span>
+          <span class="badge ${s.enabled ? 'green' : 'gray'}">${s.enabled ? 'Active' : 'Off'}</span>
+        </div>`).join('')}
+    </div>
+    <div class="form-group">
+      <label>Match by</label>
+      <select id="dedup-scope">
+        <option value="name">Channel name only</option>
+        <option value="name+group">Channel name + group</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;justify-content:space-between">
+        <span>Name match threshold</span>
+        <span id="dedup-threshold-val" style="font-weight:600;color:var(--accent)">0  Exact match</span>
+      </label>
+      <input type="range" id="dedup-threshold" min="0" max="40" step="1" value="0"
+             style="width:100%;accent-color:var(--accent)"
+             oninput="_updateThresholdLabel(this.value)" />
+      <p style="color:var(--muted);font-size:11px;margin-top:4px">
+        0 = exact &nbsp;-&nbsp; 10 = catches "CNN HD" vs "CNN" &nbsp;-&nbsp; 20 = moderate fuzzy &nbsp;-&nbsp; 40 = aggressive
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-danger" onclick="runDedup()"> Remove Duplicates</button>
+    </div>
+  `);
+  _initDedupDrag();
+}
+
+function _initDedupDrag() {
+  const list = document.getElementById('dedup-source-list');
+  if (!list) return;
+  let dragging = null;
+  list.querySelectorAll('.dedup-src-row').forEach(row => {
+    row.addEventListener('dragstart', e => { dragging = row; row.style.opacity = '0.4'; });
+    row.addEventListener('dragend',   e => { dragging = null; row.style.opacity = '1'; });
+    row.addEventListener('dragover',  e => {
+      e.preventDefault();
+      const after = [...list.querySelectorAll('.dedup-src-row:not([style*="opacity: 0.4"])')].find(r => {
+        const box = r.getBoundingClientRect();
+        return e.clientY < box.top + box.height / 2;
+      });
+      list.insertBefore(dragging, after || null);
+    });
+  });
+}
+
+function _updateThresholdLabel(val) {
+  val = parseInt(val);
+  const labels = { 0: '0  Exact match', 5: '5  Near-exact', 10: '10  Catches "CNN HD" vs "CNN"', 20: '20  Moderate fuzzy', 30: '30  Loose', 40: '40  Aggressive' };
+  const lbl = labels[val] !== undefined ? labels[val] : `${val}`;
+  document.getElementById('dedup-threshold-val').textContent = lbl;
+}
+
+async function runDedup() {
+  const list      = document.getElementById('dedup-source-list');
+  const scope     = document.getElementById('dedup-scope')?.value || 'name';
+  const tolerance = parseInt(document.getElementById('dedup-threshold')?.value || '0', 10);
+  if (!list) return;
+  const orderedIds = [...list.querySelectorAll('.dedup-src-row')].map(r => parseInt(r.dataset.id));
+  try {
+    const res = await api('/api/sources/dedup-ranked', {
+      method: 'POST',
+      body: JSON.stringify({ source_order: orderedIds, scope, tolerance }),
+    });
+    toast(`Removed ${res.removed} duplicate channel(s)`);
+    document.querySelector('.modal-overlay')?.remove();
+    _channels = await api('/api/channels');
+    filterChannels();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// 
+//  Sources
+// 
+async function renderSources() {
+  [_sources, _epgSources] = await Promise.all([
+    api('/api/sources'),
+    api('/api/epg/sources').catch(() => []),
+  ]);
+  const pluginTypes = await api('/api/sources/plugin-types');
+
+  const tb = document.getElementById('topbar-actions');
+  _pluginTypes = pluginTypes;
+  tb.innerHTML = `<button class="btn btn-primary" onclick="showAddSource()">+ Add Source</button>`;
+
+  const c = document.getElementById('content');
+  if (!_sources.length) {
+    c.innerHTML = `<div class="empty-state"><div class="icon"></div><h3>No sources yet</h3><p>Add a source to start importing channels.</p></div>`;
+    return;
+  }
+
+  c.innerHTML = `<div class="card"><table>
+    <thead><tr><th>Name</th><th>Type</th><th>Max Streams</th><th>EPG</th><th>Last Sync</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody id="sources-tbody">${_sources.map(s => sourceRow(s)).join('')}</tbody>
+  </table></div>`;
+}
+
+function sourceRow(s) {
+  const epg   = _epgSources.find(e => e.id === s.epg_source_id);
+  const color = s.color || SOURCE_COLORS[_sources.findIndex(x => x.id === s.id) % SOURCE_COLORS.length];
+  const lastSync = s.last_sync ? new Date(s.last_sync).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '--';
+  return `<tr id="src-row-${s.id}">
+    <td>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0;display:inline-block"></span>
+        <span style="font-weight:600;color:var(--text)">${esc(s.name)}</span>
+      </div>
+    </td>
+    <td><span class="pill" style="font-family:'DM Mono',monospace">${esc(s.type)}</span></td>
+    <td style="color:var(--text-dim);font-size:12px;font-family:'DM Mono',monospace">${(s.max_streams > 0) ? s.max_streams : '<span style="color:var(--muted)">inf</span>'}</td>
+    <td style="color:var(--text-dim);font-size:12px">${epg ? esc(epg.name) : '<span style="color:var(--muted)">--</span>'}</td>
+    <td style="color:var(--muted);font-size:11px;font-family:'DM Mono',monospace">${lastSync}</td>
+    <td><span class="badge ${s.enabled ? 'green' : 'gray'}">${s.enabled ? 'Active' : 'Disabled'}</span></td>
+    <td style="white-space:nowrap">
+      <div class="flex gap-8">
+        ${s.type === 'philo' ? `<button class="btn btn-sm btn-primary" onclick="showPhiloPairing(${s.id})">Pair</button>` : ''}
+        <button class="btn btn-sm btn-secondary" onclick="showEditSource(${s.id})">Edit</button>
+        <button class="btn btn-sm btn-secondary" onclick="syncSource(${s.id})">Sync</button>
+        ${((_pluginTypes||[]).find(p=>p.type===s.type)?.hasEpg) ? `<button class="btn btn-sm btn-secondary" onclick="refreshSourceEpg(${s.id})">EPG</button>` : ''}
+        <button class="btn btn-sm btn-danger" onclick="deleteSource(${s.id})">Delete</button>
+      </div>
+    </td>
+  </tr>`;
+}
+
+async function showAddSource() {
+  try {
+    // Always fetch fresh  don't rely on cached _pluginTypes
+    if (!_pluginTypes || !_pluginTypes.length) {
+      _pluginTypes = await api('/api/sources/plugin-types').catch(() => []);
+    }
+    if (!_epgSources || !_epgSources.length) {
+      _epgSources = await api('/api/epg/sources').catch(() => []);
+    }
+  } catch(e) { /* non-fatal */ }
+
+  const pluginTypes = _pluginTypes || [];
+  const defaultColor = SOURCE_COLORS[(_sources || []).length % SOURCE_COLORS.length];
+
+  modal(`
+    <div class="modal-header"><div class="modal-title">Add Source</div><button class="btn btn-icon btn-secondary" onclick="this.closest('.modal-overlay').remove()"></button></div>
+    <div class="form-group">
+      <label>Source Type</label>
+      <select id="add-type" onchange="updateConfigFields()">
+        ${pluginTypes.length
+          ? pluginTypes.map(p => `<option value="${esc(p.type)}">${esc(p.icon||'')} ${esc(p.displayName)} &ndash; ${esc(p.description)}</option>`).join('')
+          : '<option value="">No plugin types found</option>'}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Display Name</label>
+      <input id="add-name" placeholder="My Playlist" />
+    </div>
+    <div id="add-config-fields"></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Max Streams (0 = unlimited)</label>
+        <input id="add-max-streams" type="number" min="0" value="0" />
+      </div>
+      <div class="form-group">
+        <label>Source Color</label>
+        <input id="add-color" type="color" value="${defaultColor}" style="height:38px;padding:2px 4px;cursor:pointer" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>EPG Source (optional)</label>
+      <select id="add-epg-source">
+        <option value=""> None </option>
+        ${(_epgSources||[]).map(e => `<option value="${e.id}">${esc(e.name)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary" id="add-source-btn" onclick="addSource()">Add Source</button>
+    </div>
+  `);
+  updateConfigFields();
+}
+
+async function showEditSource(id) {
+  const s = _sources.find(x => x.id === id);
+  if (!s) return;
+
+  // Ensure plugin types are loaded (may not be if user never opened Add Source)
+  if (!_pluginTypes || !_pluginTypes.length) {
+    _pluginTypes = await api('/api/sources/plugin-types').catch(() => []);
+  }
+
+  const color     = s.color || SOURCE_COLORS[_sources.findIndex(x => x.id === id) % SOURCE_COLORS.length];
+  const plugin    = (_pluginTypes || []).find(p => p.type === s.type);
+  let   existingCfg = {};
+  try { existingCfg = JSON.parse(s.config || '{}'); } catch(_) {}
+
+  const configSection = plugin?.configFields?.length
+    ? `<div class="form-group" style="border-top:1px solid var(--border);padding-top:14px;margin-top:2px">
+         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">Plugin Config</div>
+         ${_renderConfigFieldsHtml(plugin.configFields, existingCfg, 'edit-cfg-field-')}
+       </div>`
+    : '';
+
+  modal(`
+    <div class="modal-header"><div class="modal-title">Edit Source  ${esc(s.name)}</div><button class="btn btn-icon btn-secondary" onclick="this.closest('.modal-overlay').remove()"></button></div>
+    <div class="form-group">
+      <label>Display Name</label>
+      <input id="edit-name" value="${esc(s.name)}" />
+    </div>
+    ${configSection}
+    <div class="form-row">
+      <div class="form-group">
+        <label>Max Streams (0 = unlimited)</label>
+        <input id="edit-max-streams" type="number" min="0" value="${s.max_streams ?? 0}" />
+      </div>
+      <div class="form-group">
+        <label>Source Color</label>
+        <input id="edit-color" type="color" value="${color}" style="height:38px;padding:2px 4px;cursor:pointer" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>EPG Source</label>
+      <select id="edit-epg-source">
+        <option value=""> None </option>
+        ${_epgSources.map(e => `<option value="${e.id}" ${s.epg_source_id == e.id ? 'selected' : ''}>${esc(e.name)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Status</label>
+      <select id="edit-enabled">
+        <option value="1" ${s.enabled ? 'selected' : ''}>Active</option>
+        <option value="0" ${!s.enabled ? 'selected' : ''}>Disabled</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditSource(${s.id})">Save</button>
+    </div>
+  `);
+}
+
+async function saveEditSource(id) {
+  const s             = _sources.find(x => x.id === id);
+  const name          = document.getElementById('edit-name')?.value?.trim();
+  const max_streams   = parseInt(document.getElementById('edit-max-streams')?.value || '0');
+  const color         = document.getElementById('edit-color')?.value || null;
+  const epg_raw       = document.getElementById('edit-epg-source')?.value;
+  const epg_source_id = epg_raw ? parseInt(epg_raw) : null;
+  const enabled       = parseInt(document.getElementById('edit-enabled')?.value ?? '1');
+  if (!name) return toast('Name required', 'error');
+
+  // Merge configFields values on top of existing config
+  let config = null;
+  const plugin = (_pluginTypes || []).find(p => p.type === s?.type);
+  if (plugin?.configFields?.length) {
+    let base = {};
+    try { base = JSON.parse(s?.config || '{}'); } catch(_) {}
+    config = { ...base, ..._buildConfigFromFields(plugin.configFields, 'edit-cfg-field-') };
+  }
+
+  try {
+    const body = { name, max_streams, color, epg_source_id, enabled };
+    if (config !== null) body.config = JSON.stringify(config);
+    await api(`/api/sources/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+    toast('Source updated');
+    document.querySelector('.modal-overlay')?.remove();
+    renderSources();
+  } catch(err) { toast(err.message, 'error'); }
+}
+
+function _renderConfigFieldsHtml(fields, existingConfig, prefix) {
+  return fields.map(f => {
+    const val = existingConfig ? (existingConfig[f.key] ?? '') : '';
+    const inputType = f.type === 'password' ? 'password' : f.type === 'number' ? 'number' : 'text';
+    return `<div class="form-group">
+      <label>${esc(f.label)}</label>
+      <input id="${prefix}${esc(f.key)}"
+             type="${inputType}"
+             placeholder="${esc(f.placeholder || '')}"
+             value="${esc(String(val))}"
+             ${f.required ? 'required' : ''} />
+      ${f.hint ? `<p style="color:var(--muted);font-size:11px;margin-top:4px">${esc(f.hint)}</p>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function _buildConfigFromFields(fields, prefix) {
+  const cfg = {};
+  for (const f of fields) {
+    const el  = document.getElementById(`${prefix}${f.key}`);
+    const val = el ? el.value.trim() : '';
+    if (val !== '') cfg[f.key] = f.type === 'number' ? Number(val) : val;
+  }
+  return cfg;
+}
+
+function updateConfigFields() {
+  const type = document.getElementById('add-type')?.value;
+  const wrap = document.getElementById('add-config-fields');
+  if (!wrap || !type) return;
+
+  const plugin = (_pluginTypes || []).find(p => p.type === type);
+  if (plugin?.configFields?.length) {
+    wrap.innerHTML = _renderConfigFieldsHtml(plugin.configFields, null, 'cfg-field-');
+    return;
+  }
+
+  // Legacy hardcoded fields for built-in types
+  const fields = {
+    m3u:      `<div class="form-group"><label>Playlist URL or Path</label><input id="cfg-url" placeholder="https://example.com/playlist.m3u8" /></div>`,
+    hdhr:     `<div class="form-group"><label>Device Base URL</label><input id="cfg-base_url" placeholder="http://192.168.1.x" /></div>`,
+    localnow: `<div class="form-group"><label>ZIP Code</label><input id="cfg-zip" placeholder="90210" maxlength="5" /></div>`,
+    philo:    `<div class="form-group"><label>Email or Phone Number</label><input id="cfg-email" placeholder="you@example.com or 5551234567" /><p style="color:var(--muted);font-size:11px;margin-top:4px">After adding, click <b>Pair</b> on the source row to authenticate via OTP code.</p></div>`,
+    manual:   `<div class="form-group"><label>Channels (JSON)</label><textarea id="cfg-channels" placeholder='[{"name":"CNN","stream_url":"https://..."}]'></textarea></div>`,
+    tve:      `<div class="form-group"><label>Channels (JSON)</label><textarea id="cfg-channels" placeholder='[{"name":"ESPN","stream_url":"tve://espn","epg_id":"ESPN"}]'></textarea></div>`,
+  };
+  wrap.innerHTML = fields[type] || `<div class="form-group"><label>Config (JSON)</label><textarea id="cfg-raw" placeholder="{}"></textarea></div>`;
+}
+
+async function addSource() {
+  const type          = document.getElementById('add-type')?.value;
+  const name          = document.getElementById('add-name')?.value?.trim();
+  const max_streams   = parseInt(document.getElementById('add-max-streams')?.value || '0');
+  const color         = document.getElementById('add-color')?.value || null;
+  const epg_raw       = document.getElementById('add-epg-source')?.value;
+  const epg_source_id = epg_raw ? parseInt(epg_raw) : null;
+
+  if (!name) return toast('Name required', 'error');
+
+  let config = {};
+  try {
+    const plugin = (_pluginTypes || []).find(p => p.type === type);
+    if (plugin?.configFields?.length) {
+      config = _buildConfigFromFields(plugin.configFields, 'cfg-field-');
+    } else if (type === 'm3u')           config = { url: document.getElementById('cfg-url')?.value?.trim() };
+    else if (type === 'hdhr')     config = { base_url: document.getElementById('cfg-base_url')?.value?.trim() };
+    else if (type === 'localnow') config = { zip: document.getElementById('cfg-zip')?.value?.trim() || '10001' };
+    else if (type === 'philo')    config = { email: document.getElementById('cfg-email')?.value?.trim(), channels: [] };
+    else if (type === 'manual' || type === 'tve') config = { channels: JSON.parse(document.getElementById('cfg-channels')?.value || '[]') };
+    else                          config = JSON.parse(document.getElementById('cfg-raw')?.value || '{}');
+  } catch(e) { return toast('Invalid config JSON', 'error'); }
+
+  const btn = document.getElementById('add-source-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Adding'; }
+
+  try {
+    const res = await api('/api/sources', { method: 'POST', body: JSON.stringify({ name, type, config, max_streams, color, epg_source_id }) });
+    if (res.warning) {
+      toast(`Added "${name}" with warning: ${res.warning}`, 'error');
+    } else {
+      toast(`Added "${name}"  ${res.channels_imported ?? 0} channels imported`);
+    }
+    document.querySelector('.modal-overlay')?.remove();
+    renderSources();
+  } catch(err) {
+    toast(err.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Add Source'; }
+  }
+}
+
+async function syncSource(id) {
+  const btn = event?.target;
+  if (btn) btn.textContent = '';
+  try {
+    const res = await api(`/api/sources/${id}/sync`, { method: 'POST' });
+    toast(`Synced  ${res.channels_imported} channels`);
+    renderSources();
+  } catch(err) { toast(err.message, 'error'); }
+}
+
+async function deleteSource(id) {
+  if (!confirm('Delete this source and all its channels?')) return;
+  await api(`/api/sources/${id}`, { method: 'DELETE' });
+  toast('Source deleted');
+  renderSources();
+}
+
+async function refreshSourceEpg(id) {
+  const btn = event?.target;
+  const orig = btn?.textContent;
+  if (btn) { btn.disabled = true; btn.textContent = ''; }
+  try {
+    const res = await api(`/api/sources/${id}/refresh-epg`, { method: 'POST' });
+    toast(`EPG refreshed  ${res.programs ?? 0} programs`);
+  } catch(err) { toast(err.message, 'error'); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = orig; } }
+}
+
+//  Philo Browser OTP Pairing 
+async function showPhiloPairing(sourceId) {
+  const src = _sources.find(s => s.id === sourceId);
+  const savedIdent = (() => { try { return JSON.parse(src?.config || '{}').ident || ''; } catch(e) { return ''; } })();
+
+  modal(`
+    <div class="modal-header">
+      <div class="modal-title"> Pair Philo  ${esc(src?.name || 'Source')}</div>
+      <button class="btn btn-icon btn-secondary" onclick="this.closest('.modal-overlay').remove()"></button>
+    </div>
+    <div style="padding:16px 0">
+      <p style="color:var(--muted);font-size:13px;margin-bottom:16px">
+        Enter your Philo <b>email or phone number</b> and click <b>Send Code</b>.
+        A headless browser will open the Philo login page and send you an OTP.
+      </p>
+
+      <div id="pair-step-1">
+        <div class="form-group">
+          <label>Email or Phone</label>
+          <input id="pair-ident" placeholder="you@example.com or 5551234567" value="${esc(savedIdent)}" />
+        </div>
+        <div id="pair-status" style="display:none;margin-bottom:12px;padding:10px;border-radius:6px;font-size:13px"></div>
+        <div class="flex gap-8" style="justify-content:flex-end">
+          <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+          <button class="btn btn-primary" id="pair-send-btn" onclick="philoSendCode(${sourceId})">Send Code</button>
+        </div>
+      </div>
+
+      <div id="pair-step-2" style="display:none">
+        <p style="color:var(--muted);font-size:13px;margin-bottom:12px">
+           Code sent  check your email or phone.
+        </p>
+        <div class="form-group">
+          <label>Verification Code</label>
+          <input id="pair-code" type="text" placeholder="123456" maxlength="8"
+            style="letter-spacing:4px;font-size:22px;font-weight:700;text-align:center" />
+        </div>
+        <div id="pair-status-2" style="display:none;margin-bottom:12px;padding:10px;border-radius:6px;font-size:13px"></div>
+        <div class="flex gap-8" style="justify-content:flex-end">
+          <button class="btn btn-secondary" onclick="philoPairingBack()"> Back</button>
+          <button class="btn btn-primary" onclick="philoVerifyCode(${sourceId})">Verify & Import</button>
+        </div>
+      </div>
+    </div>
+  `);
+}
+
+async function philoSendCode(sourceId) {
+  const ident = document.getElementById('pair-ident')?.value?.trim();
+  if (!ident) return toast('Email or phone required', 'error');
+
+  const btn    = document.getElementById('pair-send-btn');
+  const status = document.getElementById('pair-status');
+  btn.textContent = 'Opening Philo';
+  btn.disabled = true;
+  status.style.display = 'block';
+  status.style.background = 'var(--muted-bg, #f8f9fa)';
+  status.style.color = 'var(--muted)';
+  status.textContent = 'Opening Philo login page';
+
+  try {
+    await api('/api/philo/send_code', { method: 'POST', body: JSON.stringify({ ident }) });
+
+    // Poll /send_code/status until awaiting_code or error
+    let polls = 0;
+    const iv = setInterval(async () => {
+      polls++;
+      const s = await api('/api/philo/send_code/status').catch(() => ({}));
+
+      if (s.state === 'sending') {
+        status.textContent = s.message || 'Opening Philo login page';
+
+      } else if (s.state === 'awaiting_code' || s.state === 'done_auth') {
+        clearInterval(iv);
+        if (s.state === 'done_auth') {
+          // Already authenticated  go straight to verify with empty code
+          await philoDoVerify(sourceId, '');
+        } else {
+          document.getElementById('pair-step-1').style.display = 'none';
+          document.getElementById('pair-step-2').style.display = '';
+          setTimeout(() => document.getElementById('pair-code')?.focus(), 50);
+        }
+
+      } else if (s.state === 'error') {
+        clearInterval(iv);
+        status.style.background = 'var(--danger-bg, #f8d7da)';
+        status.style.color = 'var(--danger, #721c24)';
+        status.textContent = '- ' + (s.message || 'Unknown error');
+        btn.textContent = 'Send Code';
+        btn.disabled = false;
+
+      } else if (polls > 60) {
+        clearInterval(iv);
+        status.textContent = '- Timed out waiting for browser';
+        btn.textContent = 'Send Code';
+        btn.disabled = false;
+      }
+    }, 2000);
+
+  } catch(err) {
+    status.style.background = 'var(--danger-bg, #f8d7da)';
+    status.style.color = 'var(--danger, #721c24)';
+    status.textContent = '- ' + err.message;
+    btn.textContent = 'Send Code';
+    btn.disabled = false;
+  }
+}
+
+function philoPairingBack() {
+  document.getElementById('pair-step-1').style.display = '';
+  document.getElementById('pair-step-2').style.display = 'none';
+  document.getElementById('pair-status').style.display = 'none';
+  const btn = document.getElementById('pair-send-btn');
+  if (btn) { btn.disabled = false; btn.textContent = 'Send Code'; }
+}
+
+async function philoVerifyCode(sourceId) {
+  const code = document.getElementById('pair-code')?.value?.trim();
+  if (!code) return toast('Enter the verification code', 'error');
+  await philoDoVerify(sourceId, code);
+}
+
+async function philoDoVerify(sourceId, code) {
+  const status2 = document.getElementById('pair-status-2') || document.getElementById('pair-status');
+  if (status2) {
+    status2.style.display = 'block';
+    status2.style.background = 'var(--muted-bg, #f8f9fa)';
+    status2.style.color = 'var(--muted)';
+    status2.textContent = 'Verifying';
+  }
+  try {
+    const res = await api('/api/philo/verify_code', {
+      method: 'POST',
+      body: JSON.stringify({ code, source_id: sourceId }),
+    });
+    if (status2) {
+      status2.style.background = 'var(--success-bg, #d4edda)';
+      status2.style.color = 'var(--success, #155724)';
+      status2.textContent = ` Signed in as ${res.user}    ${res.channels_count ?? 0} channels imported.`;
+    }
+    setTimeout(() => { document.querySelector('.modal-overlay')?.remove(); renderSources(); }, 1500);
+  } catch(err) {
+    if (status2) {
+      status2.style.background = 'var(--danger-bg, #f8d7da)';
+      status2.style.color = 'var(--danger, #721c24)';
+      status2.textContent = '- ' + err.message;
+    }
+  }
+}
+
+
+// 
+//  EPG Sources
+// 
+async function renderEpgSources() {
+  _epgSources = await api('/api/epg/sources');
+
+  const tb = document.getElementById('topbar-actions');
+  tb.innerHTML = `<button class="btn btn-primary" onclick="showAddEpg()">+ Add EPG</button>`;
+
+  const c = document.getElementById('content');
+  c.innerHTML = `
+    <div class="card">
+      <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Add XMLTV EPG sources for program guide data (e.g. from <b>epg.pw</b>, <b>schedules direct</b>, or a local file).</p>
+      ${!_epgSources.length ? '<div class="empty-state" style="padding:24px 20px"><div class="icon">◷</div><p>No EPG sources yet.</p></div>' : `
+      <table>
+        <thead><tr><th>Name</th><th>URL</th><th>Refresh</th><th>Last Fetch</th><th>Actions</th></tr></thead>
+        <tbody>${_epgSources.map(s => `<tr>
+          <td style="font-weight:600">${esc(s.name)}</td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:11px;font-family:'DM Mono',monospace">${esc(s.url)}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:5px">
+              <input type="number" min="1" max="168" value="${s.refresh_hours||6}"
+                style="width:48px;padding:4px 6px;border:1px solid var(--border2);border-radius:5px;background:var(--surface2);color:var(--text);font-size:12px;font-family:'DM Mono',monospace"
+                onchange="setEpgRefreshHours(${s.id}, this.value)" />
+              <span style="color:var(--muted);font-size:10px">hr</span>
+            </div>
+          </td>
+          <td style="color:var(--muted);font-size:11px;font-family:'DM Mono',monospace">${s.last_fetch ? new Date(s.last_fetch).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—'}</td>
+          <td>
+            <div class="flex gap-8">
+              <button class="btn btn-sm btn-secondary" onclick="refreshEpgAndChannels(${s.id})">Refresh</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteEpg(${s.id})">Delete</button>
+            </div>
+          </td>
+        </tr>`).join('')}</tbody>
+      </table>`}
+    </div>
+  `;
+}
+
+function showAddEpg() {
+  modal(`
+    <div class="modal-header"><div class="modal-title">Add EPG Source</div><button class="btn btn-icon btn-secondary" onclick="this.closest('.modal-overlay').remove()"></button></div>
+    <div class="form-group"><label>Name</label><input id="epg-name" placeholder="XMLTV Guide" /></div>
+    <div class="form-group"><label>XMLTV URL</label><input id="epg-url" placeholder="https://example.com/epg.xml" /></div>
+    <div class="form-group">
+      <label>Auto-refresh every (hours)</label>
+      <input type="number" id="epg-refresh-hours" min="1" max="168" value="6" style="width:80px" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary" onclick="addEpg()">Add & Fetch</button>
+    </div>
+  `);
+}
+
+async function addEpg() {
+  const name = document.getElementById('epg-name')?.value?.trim();
+  const url  = document.getElementById('epg-url')?.value?.trim();
+  if (!name || !url) return toast('Name and URL required', 'error');
+  const refresh_hours = parseInt(document.getElementById('epg-refresh-hours')?.value || '6', 10);
+  try {
+    const src = await api('/api/epg/sources', { method:'POST', body: JSON.stringify({ name, url, refresh_hours }) });
+    await api(`/api/epg/sources/${src.id}/refresh`, { method: 'POST' });
+    toast('EPG source added and fetched');
+    document.querySelector('.modal-overlay')?.remove();
+    renderEpgSources();
+  } catch(err) { toast(err.message, 'error'); }
+}
+
+async function refreshEpg(id) {
+  toast('Refreshing EPG');
+  try {
+    const res = await api(`/api/epg/sources/${id}/refresh`, { method: 'POST' });
+    toast(`Fetched ${res.programs} programs`);
+    renderEpgSources();
+  } catch(err) { toast(err.message, 'error'); }
+}
+
+async function setEpgRefreshHours(id, val) {
+  const hours = Math.max(1, Math.min(168, parseInt(val, 10) || 6));
+  try {
+    await api(`/api/epg/sources/${id}`, { method: 'PATCH', body: JSON.stringify({ refresh_hours: hours }) });
+    await api(`/api/epg/sources/${id}/reschedule`, { method: 'POST' }).catch(() => {});
+    toast(`Refresh interval updated to ${hours}h`);
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function refreshEpgAndChannels(id) {
+  toast('Refreshing EPG and channels');
+  try {
+    const [epgRes] = await Promise.all([
+      api(`/api/epg/sources/${id}/refresh`, { method: 'POST' }),
+    ]);
+    // Also re-sync any sources that use this EPG source
+    const linked = _sources.filter(s => s.epg_source_id === id);
+    for (const src of linked) {
+      try { await api(`/api/sources/${src.id}/sync`, { method: 'POST' }); } catch(_) {}
+    }
+    toast(`Fetched ${epgRes.programs} programs` + (linked.length ? ` - refreshed ${linked.length} source(s)` : ''));
+    _channels = await api('/api/channels');
+    renderEpgSources();
+  } catch(err) { toast(err.message, 'error'); }
+}
+
+async function deleteEpg(id) {
+  if (!confirm('Delete this EPG source?')) return;
+  await api(`/api/epg/sources/${id}`, { method: 'DELETE' });
+  toast('EPG source deleted');
+  renderEpgSources();
+}
+
+// 
+//  Export
+// 
+function renderExport() {
+  const base = window.location.origin;
+  const c = document.getElementById('content');
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-title" style="margin-bottom:16px">Playlist & Guide URLs</div>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:16px">Use these URLs in Plex, Jellyfin, Emby, Channels DVR, or any other IPTV player.</p>
+
+      ${[
+        ['M3U Playlist',     `${base}/channels.m3u`,    'For IPTV players and DVR apps'],
+        ['XMLTV EPG Guide',  `${base}/epg.xml`,          'Program guide data'],
+        ['HDHomeRun Lineup', `${base}/lineup.json`,      'For Plex DVR auto-detection'],
+        ['Discovery JSON',   `${base}/discover.json`,    'HDHomeRun device emulation'],
+      ].map(([label, url, desc]) => `
+        <div class="export-row">
+          <div class="export-row-label">${esc(label)}</div>
+          <div class="export-row-desc">${esc(desc)}</div>
+          <div class="export-row-input">
+            <input value="${esc(url)}" readonly onclick="this.select()">
+            <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText('${esc(url)}').then(()=>toast('Copied!'))">Copy</button>
+            <a href="${esc(url)}" target="_blank" class="btn btn-secondary btn-sm">Open</a>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom:12px">Plex DVR Setup</div>
+      <ol style="padding-left:20px;line-height:2.2;color:var(--text-dim);font-size:13px">
+        <li>In Plex, go to <b>Settings  Live TV & DVR  Set Up Plex DVR</b></li>
+        <li>Choose <b>Network Tuner</b> and enter <code style="background:var(--surface2);padding:1px 5px;border-radius:4px">${base}</code></li>
+        <li>Plex will auto-detect TVNow via the HDHomeRun emulation</li>
+        <li>Set your EPG source to <code style="background:var(--surface2);padding:1px 5px;border-radius:4px">${base}/epg.xml</code></li>
+      </ol>
+    </div>
+  `;
+}
+
+// 
+//  Logs
+// 
+async function renderLogs() {
+  const tb = document.getElementById('topbar-actions');
+  tb.innerHTML = `<button class="btn btn-secondary" onclick="renderLogs()"> Refresh</button>`;
+
+  const logs = await api('/api/logs?limit=200');
+  const c    = document.getElementById('content');
+  c.innerHTML = `
+    <div class="card" style="padding:0">
+      <div id="log-container">
+        ${logs.map(l => `<div class="log-entry ${esc(l.level)}">
+          <span class="ts">${esc(l.time.slice(11,19))}</span>
+          <span class="lvl">${esc(l.level)}</span>
+          <span class="msg">${esc(l.message)}</span>
+        </div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// 
+//  System stats polling
+// 
+async function pollSystem() {
+  try {
+    const s = await api('/api/system');
+    document.getElementById('mem-pct').textContent  = `${s.memory.pct}%`;
+    document.getElementById('mem-bar').style.width  = `${s.memory.pct}%`;
+    document.getElementById('cpu-load').textContent = s.cpu.load1;
+    if (s.gpu) {
+      document.getElementById('gpu-row').style.display = '';
+      document.getElementById('gpu-pct').textContent   = `${s.gpu.gpuPct}%`;
+    }
+  } catch (_) {}
+}
+pollSystem();
+setInterval(pollSystem, 15000);
+
+// 
+//  Settings
+// 
+async function renderSettings() {
+  const tb = document.getElementById('topbar-actions');
+  tb.innerHTML = '';
+  const c = document.getElementById('content');
+
+  // Load server-side settings and EPG sources
+  let serverSettings = {}, epgSources = [];
+  try { serverSettings = await api('/api/settings'); } catch(_) {}
+  try { epgSources = await api('/api/epg/sources'); } catch(_) {}
+
+  const defaultEpgHours   = parseInt(serverSettings.epg_refresh_hours   || '6',  10);
+  const defaultSyncHours  = parseInt(serverSettings.sync_refresh_hours  || '12', 10);
+
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-title" style="margin-bottom:4px"> Refresh Intervals</div>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:16px">
+        Controls how often TVNow automatically fetches updated data in the background.
+      </p>
+
+      <div style="display:grid;gap:14px">
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px">
+          <div>
+            <div style="font-weight:500;margin-bottom:2px">Channel lineup sync</div>
+            <div style="font-size:12px;color:var(--muted)">Re-fetches each source's channel list (new channels, removed channels)</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:16px">
+            <input type="number" id="setting-sync-hours" min="1" max="168" value="${defaultSyncHours}"
+              style="width:60px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;text-align:center" />
+            <span style="color:var(--muted);font-size:12px">hr</span>
+          </div>
+        </div>
+
+        <div style="padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${epgSources.length ? 12 : 0}px">
+            <div>
+              <div style="font-weight:500;margin-bottom:2px">EPG program guide refresh</div>
+              <div style="font-size:12px;color:var(--muted)">Per-source schedule  edit each source's interval below</div>
+            </div>
+          </div>
+          ${epgSources.length ? `
+          <table style="width:100%;font-size:13px;border-collapse:collapse">
+            <thead><tr style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px">
+              <th style="text-align:left;padding:4px 8px 6px 0;font-weight:500">EPG Source</th>
+              <th style="text-align:left;padding:4px 8px 6px;font-weight:500">Last Fetched</th>
+              <th style="text-align:right;padding:4px 0 6px 8px;font-weight:500">Every</th>
+            </tr></thead>
+            <tbody>${epgSources.map(s => `<tr style="border-top:1px solid var(--border)">
+              <td style="padding:7px 8px 7px 0;font-weight:500">${esc(s.name)}</td>
+              <td style="padding:7px 8px;color:var(--muted);font-size:12px">${s.last_fetch ? new Date(s.last_fetch).toLocaleString() : 'Never'}</td>
+              <td style="padding:7px 0 7px 8px;text-align:right">
+                <div style="display:inline-flex;align-items:center;gap:5px">
+                  <input type="number" min="1" max="168" value="${s.refresh_hours || 6}"
+                    style="width:52px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:12px;text-align:center"
+                    onchange="setEpgRefreshHours(${s.id}, this.value)" />
+                  <span style="color:var(--muted);font-size:11px">hr</span>
+                </div>
+              </td>
+            </tr>`).join('')}</tbody>
+          </table>` : '<p style="color:var(--muted);font-size:12px;margin:0">No EPG sources configured yet. <a onclick="navigate(\'epg\')" style="cursor:pointer;color:var(--accent)">Add one </a></p>'}
+        </div>
+
+      </div>
+
+      <div style="margin-top:14px;display:flex;justify-content:flex-end">
+        <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px"> Plugin Credentials</div>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:8px">
+        Credentials for Tubi, Pluto TV, and other plugins are stored securely in each source's configuration.
+        To add or update credentials, go to <b>Sources</b> and click <b> Edit</b> on the source  the login fields will appear there.
+      </p>
+      <button class="btn btn-secondary" onclick="navigate('sources')">Go to Sources </button>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px"> Stream URLs</div>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:8px">
+        All channels are streamed via this server. The stream URL pattern is:
+      </p>
+      <code style="background:var(--surface2);padding:6px 12px;border-radius:6px;font-size:13px;display:block;margin-bottom:8px">
+        ${window.location.origin}/stream/{channelId}
+      </code>
+      <p style="color:var(--muted);font-size:12px">
+        For use in Plex, Jellyfin, Emby, or any IPTV player  see the <b>Export</b> page for M3U and XMLTV URLs.
+      </p>
+    </div>
+  `;
+}
+
+async function saveSettings() {
+  const syncHours = parseInt(document.getElementById('setting-sync-hours')?.value || '12', 10);
+  try {
+    await api('/api/settings', { method: 'POST', body: JSON.stringify({ sync_refresh_hours: syncHours }) });
+    // Notify server to apply new sync interval immediately
+    await api('/api/settings/apply', { method: 'POST' }).catch(() => {});
+    toast('Settings saved');
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+
+// 
+//  Stream Health
+// 
+async function renderStreamHealth() {
+  const tb = document.getElementById('topbar-actions');
+  tb.innerHTML = `<button class="btn btn-secondary" onclick="renderStreamHealth()"> Refresh</button>`;
+  const c = document.getElementById('content');
+
+  let active = { active_streams: 0, channels: [] }, top = [], stats = [];
+  try { active = await api('/api/stream-health/active'); } catch(_) {}
+  try { top    = await api('/api/stream-health/top-channels?days=7&limit=10'); } catch(_) {}
+  try { stats  = await api('/api/stream-health/stats?days=7'); } catch(_) {}
+
+  // Build per-channel daily aggregates for a simple sparkline-style view
+  const byChannel = {};
+  for (const r of stats) {
+    if (!byChannel[r.channel_id]) byChannel[r.channel_id] = { name: r.channel_name, rows: [] };
+    byChannel[r.channel_id].rows.push(r);
+  }
+
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-title">Live Streams</div>
+      <div class="health-live-count">${active.active_streams}</div>
+      ${active.channels.length ? `
+        <table style="margin-top:10px">
+          <thead><tr>
+            <th>Channel</th>
+            <th style="text-align:right">Viewers</th>
+          </tr></thead>
+          <tbody>${active.channels.map(a => `<tr>
+            <td>${esc(a.channel_name)}</td>
+            <td style="text-align:right;font-weight:700;font-family:'DM Mono',monospace">${a.viewers}</td>
+          </tr>`).join('')}</tbody>
+        </table>` : '<p style="color:var(--muted);font-size:13px;margin-top:8px">No active streams right now.</p>'}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Top Channels — Last 7 Days</div>
+      ${top.length ? `
+        <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:8px">
+          <thead><tr style="color:var(--muted);font-size:11px;text-transform:uppercase">
+            <th style="text-align:left;padding:4px 8px 4px 0">Channel</th>
+            <th style="text-align:right;padding:4px 4px">Starts</th>
+            <th style="text-align:right;padding:4px 4px">Watch Time</th>
+            <th style="text-align:right;padding:4px 0">Errors</th>
+          </tr></thead>
+          <tbody>${top.map(r => `<tr>
+            <td style="font-weight:500">${esc(r.channel_name || `ch#${r.channel_id}`)}</td>
+            <td style="text-align:right;font-family:'DM Mono',monospace">${r.total_starts}</td>
+            <td style="text-align:right;color:var(--muted);font-family:'DM Mono',monospace">${_fmtWatchTime(r.total_watch_seconds)}</td>
+            <td style="text-align:right;font-family:'DM Mono',monospace;${r.total_errors > 0 ? 'color:var(--red);font-weight:600' : 'color:var(--muted)'}">${r.total_errors}</td>
+          </tr>`).join('')}</tbody>
+        </table>` : '<p style="color:var(--muted);font-size:13px;margin-top:8px">No data yet  streams will appear here once channels have been watched.</p>'}
+    </div>
+
+    <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div>
+        <div class="card-title" style="margin-bottom:4px"> Purge Old Events</div>
+        <div style="font-size:12px;color:var(--muted)">Delete raw stream events older than N days (stats aggregates are kept)</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="number" id="health-purge-days" value="30" min="1" max="365"
+          style="width:64px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;text-align:center" />
+        <span style="font-size:12px;color:var(--muted)">days</span>
+        <button class="btn btn-secondary" onclick="healthPurge()">Purge</button>
+      </div>
+    </div>
+  `;
+}
+
+function _fmtWatchTime(secs) {
+  if (!secs) return '';
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+async function healthPurge() {
+  const days = parseInt(document.getElementById('health-purge-days')?.value || '30');
+  try {
+    const r = await api(`/api/stream-health/events?keep_days=${days}`, { method: 'DELETE' });
+    toast(`Purged ${r.deleted} event(s)`);
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// 
+//  Transcode Profiles
+// 
+async function renderTranscodeProfiles() {
+  const tb = document.getElementById('topbar-actions');
+  tb.innerHTML = `<button class="btn btn-primary" onclick="showCreateProfileModal()"> New Profile</button>`;
+  const c = document.getElementById('content');
+
+  let data = { profiles: [], presets: [] };
+  try { data = await api('/api/transcode-profiles'); } catch(_) {}
+
+  const { profiles, presets } = data;
+
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-title" style="margin-bottom:4px"> Saved Profiles</div>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:16px">
+        Assign profiles to sources or individual channels to control FFmpeg encoding.
+        A channel-level profile overrides its source's profile.
+      </p>
+      ${profiles.length === 0 ? `<div class="empty-state" style="padding:20px"><p>No profiles yet. Create one from a preset below or from scratch.</p></div>` : `
+        <table style="width:100%;font-size:13px;border-collapse:collapse">
+          <thead><tr style="color:var(--muted);font-size:11px;text-transform:uppercase">
+            <th style="text-align:left;padding:4px 8px 4px 0">Name</th>
+            <th style="text-align:left;padding:4px 8px">Video</th>
+            <th style="text-align:left;padding:4px 8px">Audio</th>
+            <th style="text-align:left;padding:4px 8px">Resolution</th>
+            <th style="text-align:right;padding:4px 0">Actions</th>
+          </tr></thead>
+          <tbody>${profiles.map(p => `<tr>
+            <td>
+              <div style="font-weight:600">${esc(p.name)}</div>
+              ${p.description ? `<div style="font-size:11px;color:var(--muted);margin-top:2px">${esc(p.description)}</div>` : ''}
+            </td>
+            <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-dim)">${esc(p.video_codec)}${p.video_bitrate ? ` @ ${p.video_bitrate}` : ''}</td>
+            <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-dim)">${esc(p.audio_codec)}${p.audio_bitrate ? ` @ ${p.audio_bitrate}` : ''}</td>
+            <td style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace">${p.resolution || '—'}</td>
+            <td style="text-align:right;white-space:nowrap">
+              <div class="flex gap-8" style="justify-content:flex-end">
+                <button class="btn btn-sm btn-secondary" onclick="showEditProfileModal(${p.id})">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteProfile(${p.id})">Delete</button>
+              </div>
+            </td>
+          </tr>`).join('')}</tbody>
+        </table>`}
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom:12px"> Built-in Presets</div>
+      <div style="display:grid;gap:8px">
+        ${presets.map(p => `
+          <div class="preset-card">
+            <div>
+              <div style="font-weight:600;margin-bottom:3px">${esc(p.name)}</div>
+              <div style="font-size:12px;color:var(--text-dim)">${esc(p.description)}</div>
+              <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:4px">${esc(p.video_codec)} / ${esc(p.audio_codec)}${p.resolution ? ` / ${p.resolution}` : ''}</div>
+            </div>
+            <button class="btn btn-sm btn-secondary" onclick="addFromPreset('${esc(p.name)}')">+ Use</button>
+          </div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function showCreateProfileModal() {
+  modal(`
+    <div class="modal-header"><div class="modal-title"> New Transcode Profile</div></div>
+    <div style="display:grid;gap:12px;margin-top:8px">
+      <div><label style="font-size:12px;color:var(--muted)">Profile Name *</label>
+        <input id="tp-name" type="text" placeholder="e.g. my-4k-encode" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label style="font-size:12px;color:var(--muted)">Video Codec</label>
+          <input id="tp-vcodec" type="text" value="copy" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+        <div><label style="font-size:12px;color:var(--muted)">Audio Codec</label>
+          <input id="tp-acodec" type="text" value="copy" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div><label style="font-size:12px;color:var(--muted)">Video Bitrate</label>
+          <input id="tp-vbitrate" type="text" placeholder="e.g. 4000k" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+        <div><label style="font-size:12px;color:var(--muted)">Audio Bitrate</label>
+          <input id="tp-abitrate" type="text" placeholder="e.g. 192k" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+        <div><label style="font-size:12px;color:var(--muted)">Resolution</label>
+          <input id="tp-res" type="text" placeholder="e.g. 1920x1080" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+      </div>
+      <div><label style="font-size:12px;color:var(--muted)">Extra FFmpeg Args</label>
+        <input id="tp-extra" type="text" placeholder="e.g. -preset p4 -rc cbr" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+      <div><label style="font-size:12px;color:var(--muted)">Description</label>
+        <input id="tp-desc" type="text" placeholder="Optional notes" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewProfile()">Save Profile</button>
+    </div>
+  `);
+}
+
+async function saveNewProfile() {
+  const body = {
+    name: document.getElementById('tp-name').value.trim(),
+    video_codec: document.getElementById('tp-vcodec').value.trim() || 'copy',
+    audio_codec: document.getElementById('tp-acodec').value.trim() || 'copy',
+    video_bitrate: document.getElementById('tp-vbitrate').value.trim() || null,
+    audio_bitrate: document.getElementById('tp-abitrate').value.trim() || null,
+    resolution: document.getElementById('tp-res').value.trim() || null,
+    extra_args: document.getElementById('tp-extra').value.trim() || '',
+    description: document.getElementById('tp-desc').value.trim() || '',
+  };
+  if (!body.name) return toast('Profile name is required', 'error');
+  try {
+    await api('/api/transcode-profiles', { method: 'POST', body: JSON.stringify(body) });
+    document.querySelector('.modal-overlay')?.remove();
+    toast('Profile created');
+    renderTranscodeProfiles();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function showEditProfileModal(id) {
+  let p;
+  try { p = await api(`/api/transcode-profiles/${id}`); } catch(e) { return toast(e.message,'error'); }
+  modal(`
+    <div class="modal-header"><div class="modal-title"> Edit: ${esc(p.name)}</div></div>
+    <div style="display:grid;gap:12px;margin-top:8px">
+      <div><label style="font-size:12px;color:var(--muted)">Profile Name</label>
+        <input id="tp-name" type="text" value="${esc(p.name)}" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label style="font-size:12px;color:var(--muted)">Video Codec</label>
+          <input id="tp-vcodec" type="text" value="${esc(p.video_codec||'copy')}" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+        <div><label style="font-size:12px;color:var(--muted)">Audio Codec</label>
+          <input id="tp-acodec" type="text" value="${esc(p.audio_codec||'copy')}" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div><label style="font-size:12px;color:var(--muted)">Video Bitrate</label>
+          <input id="tp-vbitrate" type="text" value="${esc(p.video_bitrate||'')}" placeholder="e.g. 4000k" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+        <div><label style="font-size:12px;color:var(--muted)">Audio Bitrate</label>
+          <input id="tp-abitrate" type="text" value="${esc(p.audio_bitrate||'')}" placeholder="e.g. 192k" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+        <div><label style="font-size:12px;color:var(--muted)">Resolution</label>
+          <input id="tp-res" type="text" value="${esc(p.resolution||'')}" placeholder="e.g. 1920x1080" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+      </div>
+      <div><label style="font-size:12px;color:var(--muted)">Extra FFmpeg Args</label>
+        <input id="tp-extra" type="text" value="${esc(p.extra_args||'')}" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+      <div><label style="font-size:12px;color:var(--muted)">Description</label>
+        <input id="tp-desc" type="text" value="${esc(p.description||'')}" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary" onclick="updateProfile(${id})">Save</button>
+    </div>
+  `);
+}
+
+async function updateProfile(id) {
+  const body = {
+    name: document.getElementById('tp-name').value.trim(),
+    video_codec: document.getElementById('tp-vcodec').value.trim(),
+    audio_codec: document.getElementById('tp-acodec').value.trim(),
+    video_bitrate: document.getElementById('tp-vbitrate').value.trim() || null,
+    audio_bitrate: document.getElementById('tp-abitrate').value.trim() || null,
+    resolution: document.getElementById('tp-res').value.trim() || null,
+    extra_args: document.getElementById('tp-extra').value.trim(),
+    description: document.getElementById('tp-desc').value.trim(),
+  };
+  try {
+    await api(`/api/transcode-profiles/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+    document.querySelector('.modal-overlay')?.remove();
+    toast('Profile updated');
+    renderTranscodeProfiles();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteProfile(id) {
+  if (!confirm('Delete this transcode profile?')) return;
+  try {
+    await api(`/api/transcode-profiles/${id}`, { method: 'DELETE' });
+    toast('Profile deleted');
+    renderTranscodeProfiles();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function addFromPreset(presetName) {
+  try {
+    await api('/api/transcode-profiles/from-preset', { method: 'POST', body: JSON.stringify({ preset_name: presetName }) });
+    toast(`Profile "${presetName}" added`);
+    renderTranscodeProfiles();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// 
+//  Webhooks
+// 
+const WEBHOOK_EVENTS = ['stream.start','stream.stop','stream.error','epg.refresh','source.sync'];
+
+async function renderWebhooks() {
+  const tb = document.getElementById('topbar-actions');
+  tb.innerHTML = `<button class="btn btn-primary" onclick="showCreateWebhookModal()"> New Webhook</button>`;
+  const c = document.getElementById('content');
+
+  let hooks = [];
+  try { hooks = await api('/api/webhooks'); } catch(_) {}
+
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-title" style="margin-bottom:4px"> Webhooks</div>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:16px">
+        Fire HTTP POST callbacks when TVNow stream events occur.
+        Supports: ${WEBHOOK_EVENTS.map(e => `<code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:11px">${e}</code>`).join(' ')}
+      </p>
+      ${hooks.length === 0 ? `<div class="empty-state" style="padding:20px"><p>No webhooks configured yet.</p></div>` : `
+        <div style="display:grid;gap:10px">
+          ${hooks.map(h => `
+            <div style="padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+                <div style="flex:1;min-width:0">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                    <span style="font-weight:600">${esc(h.name)}</span>
+                    <span style="font-size:11px;padding:2px 7px;border-radius:12px;background:${h.enabled ? 'rgba(34,197,94,.15)' : 'var(--surface)'};color:${h.enabled ? '#22c55e' : 'var(--muted)'}">${h.enabled ? 'active' : 'disabled'}</span>
+                  </div>
+                  <div style="font-size:12px;color:var(--muted);font-family:monospace;word-break:break-all">${esc(h.url)}</div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:4px">
+                    Events: <span style="color:var(--text)">${esc(h.events)}</span>
+                    ${h.last_fired ? ` &nbsp;-&nbsp; Last fired: ${new Date(h.last_fired+'Z').toLocaleString()} (HTTP ${h.last_status||'?'})` : ''}
+                  </div>
+                </div>
+                <div style="display:flex;gap:6px;flex-shrink:0">
+                  <button class="btn btn-sm btn-secondary" onclick="testWebhook(${h.id})" title="Send test payload"> Test</button>
+                  <button class="btn btn-sm btn-secondary" onclick="toggleWebhook(${h.id})">${h.enabled ? 'Disable' : 'Enable'}</button>
+                  <button class="btn btn-sm btn-secondary" onclick="showEditWebhookModal(${h.id})"></button>
+                  <button class="btn btn-sm btn-danger" onclick="deleteWebhook(${h.id})"></button>
+                </div>
+              </div>
+            </div>`).join('')}
+        </div>`}
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom:8px"> Payload Format</div>
+      <pre style="background:var(--surface2);padding:12px;border-radius:8px;font-size:12px;overflow:auto;margin:0">{
+  "event": "stream.start",
+  "ts": "2025-01-15T10:30:00.000Z",
+  "channel_id": 42,
+  "channel_name": "CNN",
+  "source_id": 1,
+  "detail": {}
+}</pre>
+      <p style="color:var(--muted);font-size:12px;margin-top:8px">
+        If a secret is set, it is sent as the <code>X-TVNow-Secret</code> header. Failed deliveries retry up to 3 times with 5-second delays.
+      </p>
+    </div>
+  `;
+}
+
+function showCreateWebhookModal() {
+  modal(`
+    <div class="modal-header"><div class="modal-title"> New Webhook</div></div>
+    <div style="display:grid;gap:12px;margin-top:8px">
+      <div><label style="font-size:12px;color:var(--muted)">Name *</label>
+        <input id="wh-name" type="text" placeholder="e.g. Discord Alerts" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+      <div><label style="font-size:12px;color:var(--muted)">URL *</label>
+        <input id="wh-url" type="url" placeholder="https://hooks.example.com/..." style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+      <div><label style="font-size:12px;color:var(--muted)">Events (comma-separated, or * for all)</label>
+        <input id="wh-events" type="text" value="*" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+      <div><label style="font-size:12px;color:var(--muted)">Secret (optional)</label>
+        <input id="wh-secret" type="text" placeholder="Sent as X-TVNow-Secret header" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewWebhook()">Save</button>
+    </div>
+  `);
+}
+
+async function saveNewWebhook() {
+  const body = {
+    name:   document.getElementById('wh-name').value.trim(),
+    url:    document.getElementById('wh-url').value.trim(),
+    events: document.getElementById('wh-events').value.trim() || '*',
+    secret: document.getElementById('wh-secret').value.trim() || null,
+  };
+  if (!body.name || !body.url) return toast('Name and URL are required', 'error');
+  try {
+    await api('/api/webhooks', { method: 'POST', body: JSON.stringify(body) });
+    document.querySelector('.modal-overlay')?.remove();
+    toast('Webhook created');
+    renderWebhooks();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function showEditWebhookModal(id) {
+  let hooks = [];
+  try { hooks = await api('/api/webhooks'); } catch(e) { return toast(e.message,'error'); }
+  const h = hooks.find(x => x.id === id);
+  if (!h) return toast('Not found','error');
+  modal(`
+    <div class="modal-header"><div class="modal-title"> Edit: ${esc(h.name)}</div></div>
+    <div style="display:grid;gap:12px;margin-top:8px">
+      <div><label style="font-size:12px;color:var(--muted)">Name</label>
+        <input id="wh-name" type="text" value="${esc(h.name)}" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+      <div><label style="font-size:12px;color:var(--muted)">URL</label>
+        <input id="wh-url" type="url" value="${esc(h.url)}" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+      <div><label style="font-size:12px;color:var(--muted)">Events</label>
+        <input id="wh-events" type="text" value="${esc(h.events)}" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+      <div><label style="font-size:12px;color:var(--muted)">Secret</label>
+        <input id="wh-secret" type="text" value="${esc(h.secret||'')}" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary" onclick="updateWebhook(${id})">Save</button>
+    </div>
+  `);
+}
+
+async function updateWebhook(id) {
+  const body = {
+    name:   document.getElementById('wh-name').value.trim(),
+    url:    document.getElementById('wh-url').value.trim(),
+    events: document.getElementById('wh-events').value.trim(),
+    secret: document.getElementById('wh-secret').value.trim() || null,
+  };
+  try {
+    await api(`/api/webhooks/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+    document.querySelector('.modal-overlay')?.remove();
+    toast('Webhook updated');
+    renderWebhooks();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteWebhook(id) {
+  if (!confirm('Delete this webhook?')) return;
+  try { await api(`/api/webhooks/${id}`, { method: 'DELETE' }); toast('Deleted'); renderWebhooks(); }
+  catch(e) { toast(e.message, 'error'); }
+}
+
+async function toggleWebhook(id) {
+  try { await api(`/api/webhooks/${id}/toggle`, { method: 'POST' }); renderWebhooks(); }
+  catch(e) { toast(e.message, 'error'); }
+}
+
+async function testWebhook(id) {
+  try {
+    await api(`/api/webhooks/${id}/test`, { method: 'POST' });
+    toast('Test payload dispatched');
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// 
+//  User Management
+// 
+async function renderUsers() {
+  const tb = document.getElementById('topbar-actions');
+  tb.innerHTML = `<button class="btn btn-primary" onclick="showCreateUserModal()"> New User</button>`;
+  const c = document.getElementById('content');
+
+  let users = [], me = null;
+  try { users = await api('/api/users'); } catch(e) {
+    if (e.message.includes('401') || e.message.includes('403')) {
+      c.innerHTML = `<div class="card"><p style="color:var(--muted)"> No users exist yet  TVNow is in open-access mode. Create the first admin account to enable authentication.</p>
+        <button class="btn btn-primary" style="margin-top:12px" onclick="showCreateUserModal()"> Create First Admin</button></div>`;
+      return;
+    }
+  }
+  try { me = await api('/api/auth/me'); } catch(_) {}
+
+  const openAccess = me?.open_access;
+
+  c.innerHTML = `
+    ${openAccess ? `<div class="open-access-banner">
+       <strong>Open-access mode</strong>  no authentication required. Create an admin account to lock down the UI.
+    </div>` : ''}
+    <div class="card">
+      <div class="card-title" style="margin-bottom:8px">Users</div>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:16px">
+        <b>Admins</b> can manage everything. <b>Viewers</b> can only browse the guide and stream.
+        Auth is enforced via Bearer token, cookie, or <code>?token=</code> query param.
+      </p>
+      ${users.length === 0 ? `<div class="empty-state" style="padding:20px"><p>No users yet.</p></div>` : `
+        <table>
+          <thead><tr>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Last Login</th>
+            <th>Status</th>
+            <th style="text-align:right">Actions</th>
+          </tr></thead>
+          <tbody>${users.map(u => `<tr>
+            <td style="font-weight:600">${esc(u.username)}</td>
+            <td>
+              <span class="badge ${u.role==='admin'?'blue':'gray'}">${u.role}</span>
+            </td>
+            <td style="color:var(--muted);font-size:11px;font-family:'DM Mono',monospace">${u.last_login ? new Date(u.last_login+'Z').toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—'}</td>
+            <td>
+              <span class="badge ${u.enabled?'green':'red'}">${u.enabled?'Active':'Disabled'}</span>
+            </td>
+            <td style="text-align:right;white-space:nowrap">
+              <div class="flex gap-8" style="justify-content:flex-end">
+                <button class="btn btn-sm btn-secondary" onclick="showChangePasswordModal(${u.id},'${esc(u.username)}')">Password</button>
+                <button class="btn btn-sm btn-secondary" onclick="toggleUserEnabled(${u.id},${u.enabled})">${u.enabled?'Disable':'Enable'}</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id},'${esc(u.username)}')">Delete</button>
+              </div>
+            </td>
+          </tr>`).join('')}</tbody>
+        </table>`}
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom:10px">My Session</div>
+      ${me ? `
+        <p style="font-size:13px;margin-bottom:8px">Logged in as <strong>${esc(me.username)}</strong> (${me.role})</p>
+        <button class="btn btn-secondary" onclick="doLogout()">Log out</button>
+      ` : `<p style="color:var(--muted);font-size:13px">Not authenticated (open-access mode)</p>`}
+    </div>
+  `;
+}
+
+function showCreateUserModal() {
+  modal(`
+    <div class="modal-header"><div class="modal-title"> New User</div></div>
+    <div style="display:grid;gap:12px;margin-top:8px">
+      <div><label style="font-size:12px;color:var(--muted)">Username *</label>
+        <input id="u-username" type="text" placeholder="username" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+      <div><label style="font-size:12px;color:var(--muted)">Password *</label>
+        <input id="u-password" type="password" placeholder="" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+      <div><label style="font-size:12px;color:var(--muted)">Role</label>
+        <select id="u-role" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px">
+          <option value="viewer">viewer</option>
+          <option value="admin">admin</option>
+        </select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewUser()">Create User</button>
+    </div>
+  `);
+}
+
+async function saveNewUser() {
+  const body = {
+    username: document.getElementById('u-username').value.trim(),
+    password: document.getElementById('u-password').value,
+    role:     document.getElementById('u-role').value,
+  };
+  if (!body.username || !body.password) return toast('Username and password required', 'error');
+  try {
+    await api('/api/users', { method: 'POST', body: JSON.stringify(body) });
+    document.querySelector('.modal-overlay')?.remove();
+    toast('User created');
+    renderUsers();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function showChangePasswordModal(id, username) {
+  modal(`
+    <div class="modal-header"><div class="modal-title"> Change Password: ${esc(username)}</div></div>
+    <div style="margin-top:8px">
+      <label style="font-size:12px;color:var(--muted)">New Password *</label>
+      <input id="u-newpw" type="password" placeholder="" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary" onclick="changePassword(${id})">Change Password</button>
+    </div>
+  `);
+}
+
+async function changePassword(id) {
+  const pw = document.getElementById('u-newpw').value;
+  if (!pw) return toast('Password required', 'error');
+  try {
+    await api(`/api/users/${id}`, { method: 'PUT', body: JSON.stringify({ password: pw }) });
+    document.querySelector('.modal-overlay')?.remove();
+    toast('Password updated  existing sessions invalidated');
+    renderUsers();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function toggleUserEnabled(id, currentEnabled) {
+  try {
+    await api(`/api/users/${id}`, { method: 'PUT', body: JSON.stringify({ enabled: !currentEnabled }) });
+    renderUsers();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteUser(id, username) {
+  if (!confirm(`Delete user "${username}"? This cannot be undone.`)) return;
+  try { await api(`/api/users/${id}`, { method: 'DELETE' }); toast('User deleted'); renderUsers(); }
+  catch(e) { toast(e.message, 'error'); }
+}
+
+async function doLogout() {
+  try { await api('/api/auth/logout', { method: 'POST' }); } catch(_) {}
+  toast('Logged out');
+  setTimeout(() => location.reload(), 800);
+}
+
+// 
+//  Boot
+// 
+//  Restore persisted UI state then boot 
+try {
+  const savedFilter = localStorage.getItem('tvnow_guideFilter');
+  if (savedFilter) _guideSourceFilter = parseInt(savedFilter, 10) || null;
+} catch(_) {}
+
+const _startPage = (() => { try { return localStorage.getItem('tvnow_page') || 'dashboard'; } catch(_) { return 'dashboard'; } })();
+navigate(_startPage);
+</script>
+</body>
+</html>
+
+
+
+

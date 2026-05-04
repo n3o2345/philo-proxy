@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Environment / secrets
+.env
+
+# Runtime data
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Docker build artifacts
+.docker/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+*.code-workspace
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test / coverage
+coverage/
+.nyc_output/
