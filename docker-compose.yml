@@ -11,10 +11,10 @@ services:
 
   # ── NVIDIA NVENC (default) ──────────────────────────────────────────────────
   philo-proxy:
-    image: ghcr.io/${GHCR_REPO:-youruser/philo-proxy}:latest
+    image: ghcr.io/${GHCR_REPO:-n3o2345/philoproxy}:latest
     # Or build locally:
     # build: .
-    container_name: philo-proxy
+    container_name: philoproxy
     runtime: nvidia
     deploy:
       resources:
@@ -63,9 +63,9 @@ services:
 
   # ── Intel QSV (opt-in) ──────────────────────────────────────────────────────
   philo-proxy-intel:
-    image: ghcr.io/${GHCR_REPO:-youruser/philo-proxy}:latest
+    image: ghcr.io/${GHCR_REPO:-n3o2345/philoproxy}:latest
     # build: .
-    container_name: philo-proxy
+    container_name: philoproxy
     profiles: [intel]
     devices:
       - /dev/dri:/dev/dri
