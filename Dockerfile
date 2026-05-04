@@ -18,8 +18,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # ── Dependencies (separate layer — only rebuilds on package.json change) ──────
-COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev
+COPY package.json ./
+RUN npm install --omit=dev
 
 # ── Playwright Chromium (separate layer for cache efficiency) ─────────────────
 RUN npx playwright install chromium --with-deps
