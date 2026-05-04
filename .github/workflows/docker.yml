@@ -1,79 +1,68 @@
-name: Build & Push Docker Image
+name: Build and Push to GHCR
 
 on:
   push:
-    branches: [main, master]
-    tags:     ["v*.*.*"]
+    branches:
+      - main
+      - master
+    tags:
+      - "v*.*.*"
   pull_request:
-    branches: [main, master]
+    branches:
+      - main
+      - master
   workflow_dispatch:
 
 env:
-  REGISTRY:   ghcr.io
+  REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build:
-    name: Build image
+  build-and-push:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
 
     steps:
-      # ── Checkout ─────────────────────────────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ── QEMU (multi-platform) ─────────────────────────────────────────────────
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      # ── Buildx ────────────────────────────────────────────────────────────────
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # ── Login to GHCR (skip on PRs) ───────────────────────────────────────────
       - name: Log in to GitHub Container Registry
-        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # ── Metadata / tags ───────────────────────────────────────────────────────
-      # Produces tags:
-      #   branch push → ghcr.io/<owner>/<repo>:main  (or :master)
-      #   v1.2.3 tag  → ghcr.io/<owner>/<repo>:1.2.3
-      #                 ghcr.io/<owner>/<repo>:1.2
-      #                 ghcr.io/<owner>/<repo>:1
-      #                 ghcr.io/<owner>/<repo>:latest
-      - name: Extract Docker metadata
+      - name: Extract metadata (tags, labels)
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
+            # Branch push → branch name tag (e.g. ghcr.io/you/mojfixxer:main)
             type=ref,event=branch
+            # PR → pr-<number> tag (not pushed to registry, just labeled)
+            type=ref,event=pr
+            # Semver tag push → version tags (v1.2.3 → 1.2.3, 1.2, 1, latest)
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
-            type=raw,value=latest,enable={{is_default_branch}}
-          labels: |
-            org.opencontainers.image.title=PhiloProxy
-            org.opencontainers.image.description=Philo live-TV proxy via Playwright + x11grab + FFmpeg
-            org.opencontainers.image.licenses=MIT
+            # Always tag the latest commit on default branch as 'latest'
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
 
-      # ── Build & push ──────────────────────────────────────────────────────────
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
+          # Only push on non-PR events
           push: ${{ github.event_name != 'pull_request' }}
-          tags:   ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # GitHub Actions cache — drastically speeds up repeat builds
           cache-from: type=gha
-          cache-to:   type=gha,mode=max
+          cache-to: type=gha,mode=max
