@@ -244,11 +244,14 @@ router.get('/send_code/status', (req, res) => {
 // Types the OTP into the open login page, submits, extracts cookies on success.
 // ─────────────────────────────────────────────────────────────────────────────
 router.post('/verify_code', async (req, res) => {
-  const { code, source_id } = req.body;
-  if (!code) return res.status(400).json({ ok: false, error: 'code required' });
+  const { code, source_id, ident } = req.body;
+  const normalizedCode = String(code ?? '').trim();
+  if (!normalizedCode && !loginPage?.alreadyAuthed) {
+    return res.status(400).json({ ok: false, error: 'code required' });
+  }
 
   try {
-    const result = await _browserVerifyCode(String(code).trim());
+    const result = await _browserVerifyCode(normalizedCode);
     if (!result.ok) return res.status(400).json(result);
 
     // Cookies extracted -- validate via GraphQL + import channels
@@ -259,7 +262,7 @@ router.post('/verify_code', async (req, res) => {
     const channels = await gqlGetChannels(cookies);
 
     if (source_id) {
-      savePhiloSource(source_id, cookies, user, channels);
+      savePhiloSource(source_id, cookies, user, channels, ident);
       // Kick off a wider guide fetch in the background immediately after login
       gqlGetChannelsWithGuide(cookies)
         .then(guideChannels => { if (guideChannels.length) savePhiloEpg(getDb(), guideChannels); })
@@ -615,12 +618,16 @@ function philoCookiesAsString(cookies) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Save to DB
 // ─────────────────────────────────────────────────────────────────────────────
-function savePhiloSource(sourceId, cookies, user, channels) {
+function savePhiloSource(sourceId, cookies, user, channels, ident) {
   const db     = getDb();
   const source = db.prepare('SELECT * FROM sources WHERE id=?').get(sourceId);
   if (!source) return;
 
   const config    = JSON.parse(source.config);
+  if (ident) {
+    config.ident = String(ident).trim();
+    config.email = config.email || config.ident;
+  }
   config.cookies  = cookies;
   config.user     = { id: user.id, displayName: user.displayName };
   config.channels = channels.map(ch => ({

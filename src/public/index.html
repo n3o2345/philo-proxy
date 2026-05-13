@@ -2635,7 +2635,12 @@ async function refreshSourceEpg(id) {
 //  Philo Browser OTP Pairing 
 async function showPhiloPairing(sourceId) {
   const src = _sources.find(s => s.id === sourceId);
-  const savedIdent = (() => { try { return JSON.parse(src?.config || '{}').ident || ''; } catch(e) { return ''; } })();
+  const savedIdent = (() => {
+    try {
+      const config = JSON.parse(src?.config || '{}');
+      return config.ident || config.email || '';
+    } catch(e) { return ''; }
+  })();
 
   modal(`
     <div class="modal-header">
@@ -2755,6 +2760,7 @@ async function philoVerifyCode(sourceId) {
 }
 
 async function philoDoVerify(sourceId, code) {
+  const ident = document.getElementById('pair-ident')?.value?.trim();
   const status2 = document.getElementById('pair-status-2') || document.getElementById('pair-status');
   if (status2) {
     status2.style.display = 'block';
@@ -2765,7 +2771,7 @@ async function philoDoVerify(sourceId, code) {
   try {
     const res = await api('/api/philo/verify_code', {
       method: 'POST',
-      body: JSON.stringify({ code, source_id: sourceId }),
+      body: JSON.stringify({ code, source_id: sourceId, ident }),
     });
     if (status2) {
       status2.style.background = 'var(--success-bg, #d4edda)';

@@ -2,7 +2,6 @@
 
 const express  = require('express');
 const router   = express.Router();
-const axios    = require('axios');
 const { getDb }    = require('../db');
 const { fetchXmltv } = require('../lib/xmltv');
 

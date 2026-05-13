@@ -1,7 +1,6 @@
 'use strict';
 
 const express  = require('express');
-const axios    = require('axios');
 const router   = express.Router();
 const { getDb }   = require('../db');
 const plugins     = require('../plugins');
