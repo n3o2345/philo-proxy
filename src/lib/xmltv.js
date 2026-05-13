@@ -41,7 +41,7 @@ async function fetchXmltv(url) {
     const res = await axios.get(url, {
       responseType: 'text',
       timeout: 60000,
-      headers: { 'User-Agent': 'PhiloProxy/1.0' },
+      headers: { 'User-Agent': 'Philoproxy/1.0' },
     });
     text = res.data;
   } else {

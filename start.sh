@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-echo "[start] PhiloProxy starting..."
+echo "[start] Philoproxy starting..."
 
 # ── Playwright Chromium install (idempotent) ──────────────────────────────────
 # Runs every container start so upgrades are picked up without a full rebuild.
@@ -26,7 +26,7 @@ pulseaudio --start \
   --disallow-exit \
   --log-target=stderr \
   --load="module-native-protocol-unix auth-anonymous=1 socket=/var/run/pulse/native" \
-  --load="module-null-sink sink_name=philoproxy_out" \
+  --load="module-null-sink sink_name=Philoproxy_out" \
   --load="module-null-source source_name=virtual_in" \
   2>/dev/null || true
 echo "[start] PulseAudio started"
@@ -35,5 +35,5 @@ echo "[start] PulseAudio started"
 sleep 1
 
 # ── Start Node server ─────────────────────────────────────────────────────────
-echo "[start] Starting PhiloProxy on port ${PORT:-5050}"
+echo "[start] Starting Philoproxy on port ${PORT:-5050}"
 exec node /app/src/server.js

@@ -244,5 +244,5 @@ app.post('/api/settings/apply', (_req, res) => {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n  PhiloProxy => http://0.0.0.0:${PORT}\n`);
+  console.log(`\n  Philoproxy => http://0.0.0.0:${PORT}\n`);
 });

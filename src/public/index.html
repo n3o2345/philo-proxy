@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>PhiloProxy</title>
+<title>Philoproxy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -828,7 +828,7 @@ function modal(html, { onConfirm, title } = {}) {
 function navigate(page) {
   if (page === 'sources') page = 'settings';
   currentPage = page;
-  try { localStorage.setItem('philoproxy_page', page); } catch(_) {}
+  try { localStorage.setItem('Philoproxy_page', page); } catch(_) {}
   document.querySelectorAll('nav a').forEach(a => a.classList.toggle('active', a.dataset.page === page));
   document.getElementById('page-title').textContent = {
     dashboard:'Dashboard', guide:'TV Guide', channels:'Channels', maps:'Channel Maps',
@@ -1028,7 +1028,7 @@ async function renderGuide() {
 
 function toggleGuideSourceFilter(sourceId) {
   _guideSourceFilter = (_guideSourceFilter === sourceId) ? null : sourceId;
-  try { localStorage.setItem('philoproxy_guideFilter', _guideSourceFilter === null ? '' : String(_guideSourceFilter)); } catch(_) {}
+  try { localStorage.setItem('Philoproxy_guideFilter', _guideSourceFilter === null ? '' : String(_guideSourceFilter)); } catch(_) {}
   renderGuide();
 }
 
@@ -1047,7 +1047,7 @@ async function renderChannels() {
 
   // Restore persisted search
   try {
-    const saved = localStorage.getItem('philoproxy_chSearch');
+    const saved = localStorage.getItem('Philoproxy_chSearch');
     if (saved) { const el = document.getElementById('ch-search'); if (el) el.value = saved; }
   } catch(_) {}
 
@@ -1056,7 +1056,7 @@ async function renderChannels() {
 
 function filterChannels() {
   const q = document.getElementById('ch-search')?.value.toLowerCase() || '';
-  try { localStorage.setItem('philoproxy_chSearch', document.getElementById('ch-search')?.value || ''); } catch(_) {}
+  try { localStorage.setItem('Philoproxy_chSearch', document.getElementById('ch-search')?.value || ''); } catch(_) {}
   const filtered = q ? _channels.filter(c => c.name.toLowerCase().includes(q) || (c.group_name||'').toLowerCase().includes(q)) : _channels;
   renderChannelList(filtered);
 }
@@ -1215,7 +1215,7 @@ async function renderMaps() {
   `;
   // Restore saved market context
   try {
-    const saved = JSON.parse(localStorage.getItem('philoproxy_marketCtx') || '{}');
+    const saved = JSON.parse(localStorage.getItem('Philoproxy_marketCtx') || '{}');
     if (saved.market_type) { document.getElementById('global-market-type').value = saved.market_type; _mapSettings.market_type = saved.market_type; }
     if (saved.market_name) { document.getElementById('global-market-name').value = saved.market_name; _mapSettings.market_name = saved.market_name; }
   } catch(_) {}
@@ -1227,7 +1227,7 @@ async function renderMaps() {
 function _saveMarketCtx() {
   _mapSettings.market_type = document.getElementById('global-market-type')?.value || '';
   _mapSettings.market_name = document.getElementById('global-market-name')?.value || '';
-  try { localStorage.setItem('philoproxy_marketCtx', JSON.stringify(_mapSettings)); } catch(_) {}
+  try { localStorage.setItem('Philoproxy_marketCtx', JSON.stringify(_mapSettings)); } catch(_) {}
 }
 
 function _renderMapList() {
@@ -2985,7 +2985,7 @@ function renderExport() {
       <ol style="padding-left:20px;line-height:2.2;color:var(--text-dim);font-size:13px">
         <li>In Plex, go to <b>Settings  Live TV & DVR  Set Up Plex DVR</b></li>
         <li>Choose <b>Network Tuner</b> and enter <code style="background:var(--surface2);padding:1px 5px;border-radius:4px">${base}</code></li>
-        <li>Plex will auto-detect PhiloProxy via the HDHomeRun emulation</li>
+        <li>Plex will auto-detect Philoproxy via the HDHomeRun emulation</li>
         <li>Set your EPG source to <code style="background:var(--surface2);padding:1px 5px;border-radius:4px">${base}/epg.xml</code></li>
       </ol>
     </div>
@@ -3073,7 +3073,7 @@ async function renderSettings() {
     <div class="card">
       <div class="card-title" style="margin-bottom:4px"> Refresh Intervals</div>
       <p style="color:var(--muted);font-size:12px;margin-bottom:16px">
-        Controls how often PhiloProxy automatically fetches updated data in the background.
+        Controls how often Philoproxy automatically fetches updated data in the background.
       </p>
 
       <div style="display:grid;gap:14px">
@@ -3471,7 +3471,7 @@ async function renderWebhooks() {
     <div class="card">
       <div class="card-title" style="margin-bottom:4px"> Webhooks</div>
       <p style="color:var(--muted);font-size:12px;margin-bottom:16px">
-        Fire HTTP POST callbacks when PhiloProxy stream events occur.
+        Fire HTTP POST callbacks when Philoproxy stream events occur.
         Supports: ${WEBHOOK_EVENTS.map(e => `<code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:11px">${e}</code>`).join(' ')}
       </p>
       ${hooks.length === 0 ? `<div class="empty-state" style="padding:20px"><p>No webhooks configured yet.</p></div>` : `
@@ -3512,7 +3512,7 @@ async function renderWebhooks() {
   "detail": {}
 }</pre>
       <p style="color:var(--muted);font-size:12px;margin-top:8px">
-        If a secret is set, it is sent as the <code>X-PhiloProxy-Secret</code> header. Failed deliveries retry up to 3 times with 5-second delays.
+        If a secret is set, it is sent as the <code>X-Philoproxy-Secret</code> header. Failed deliveries retry up to 3 times with 5-second delays.
       </p>
     </div>
   `;
@@ -3529,7 +3529,7 @@ function showCreateWebhookModal() {
       <div><label style="font-size:12px;color:var(--muted)">Events (comma-separated, or * for all)</label>
         <input id="wh-events" type="text" value="*" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
       <div><label style="font-size:12px;color:var(--muted)">Secret (optional)</label>
-        <input id="wh-secret" type="text" placeholder="Sent as X-PhiloProxy-Secret header" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+        <input id="wh-secret" type="text" placeholder="Sent as X-Philoproxy-Secret header" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
@@ -3622,7 +3622,7 @@ async function renderUsers() {
   let users = [], me = null;
   try { users = await api('/api/users'); } catch(e) {
     if (e.message.includes('401') || e.message.includes('403')) {
-      c.innerHTML = `<div class="card"><p style="color:var(--muted)"> No users exist yet  PhiloProxy is in open-access mode. Create the first admin account to enable authentication.</p>
+      c.innerHTML = `<div class="card"><p style="color:var(--muted)"> No users exist yet  Philoproxy is in open-access mode. Create the first admin account to enable authentication.</p>
         <button class="btn btn-primary" style="margin-top:12px" onclick="showCreateUserModal()"> Create First Admin</button></div>`;
       return;
     }
@@ -3765,11 +3765,11 @@ async function doLogout() {
 // 
 //  Restore persisted UI state then boot 
 try {
-  const savedFilter = localStorage.getItem('philoproxy_guideFilter');
+  const savedFilter = localStorage.getItem('Philoproxy_guideFilter');
   if (savedFilter) _guideSourceFilter = parseInt(savedFilter, 10) || null;
 } catch(_) {}
 
-const _startPage = (() => { try { return localStorage.getItem('philoproxy_page') || 'dashboard'; } catch(_) { return 'dashboard'; } })();
+const _startPage = (() => { try { return localStorage.getItem('Philoproxy_page') || 'dashboard'; } catch(_) { return 'dashboard'; } })();
 navigate(_startPage);
 </script>
 </body>

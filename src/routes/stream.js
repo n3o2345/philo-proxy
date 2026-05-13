@@ -37,7 +37,7 @@ require('events').EventEmitter.defaultMaxListeners = 50;
 const MAX_PHILO_STREAMS   = parseInt(process.env.MAX_PHILO_STREAMS || '3');
 const SESSION_IDLE_TTL    = 5 * 60 * 1000;   // 5 min idle → kill
 const BASE_STREAM_DISPLAY = parseInt(process.env.BASE_STREAM_DISPLAY || '201');
-const STARTUP_MANIFEST_WAIT_MS = parseInt(process.env.STARTUP_MANIFEST_WAIT_MS || '3000', 10);
+const STARTUP_MANIFEST_WAIT_MS = parseInt(process.env.STARTUP_MANIFEST_WAIT_MS || '2500', 10);
 const LOW_LATENCY_HLS     = ['1', 'true', 'yes', 'on']
   .includes(String(process.env.LOW_LATENCY_HLS || '').toLowerCase());
 
@@ -190,14 +190,14 @@ function _sendWarmingManifest(channelId, session, res) {
   const hls = getHlsTuning();
   const elapsed = session.startedAt ? Math.round((Date.now() - session.startedAt) / 1000) : 0;
   _setHlsHeaders(res);
-  res.setHeader('X-PhiloProxy-State', 'warming');
+  res.setHeader('X-Philoproxy-State', 'warming');
   res.send([
     '#EXTM3U',
     '#EXT-X-VERSION:3',
     `#EXT-X-TARGETDURATION:${hls.hlsTime}`,
     '#EXT-X-MEDIA-SEQUENCE:0',
     `#EXT-X-PROGRAM-DATE-TIME:${new Date().toISOString()}`,
-    `#EXT-X-SESSION-DATA:DATA-ID="com.philoproxy.state",VALUE="warming-${channelId}-${elapsed}s"`,
+    `#EXT-X-SESSION-DATA:DATA-ID="com.Philoproxy.state",VALUE="warming-${channelId}-${elapsed}s"`,
     '',
   ].join('\n'));
 }
@@ -505,7 +505,7 @@ async function _startPhiloFfmpegX11grab(display, pulseSink, channelName, channel
        '-g', '30', '-keyint_min', '30', '-threads', '0', '-fps_mode', 'cfr',
        '-x264-params', 'nal-hrd=cbr:force-cfr=1'];
 
-  const audioDevice = pulseSink ? 'out.monitor' : 'philoproxy_out.monitor';
+  const audioDevice = pulseSink ? 'out.monitor' : 'Philoproxy_out.monitor';
 
   const args = [
     '-hide_banner', '-loglevel', 'warning',

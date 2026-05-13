@@ -28,13 +28,11 @@ async function syncSource(sourceId, type, config) {
 
   if (!plugin) throw new Error(`Unknown source type: ${type}`);
 
-  const prevRows = db.prepare('SELECT name, stream_url, enabled FROM channels WHERE source_id=?').all(sourceId);
+  const prevRows = db.prepare('SELECT id, name, stream_url, enabled FROM channels WHERE source_id=?').all(sourceId);
   const enabledMap = new Map();
   for (const r of prevRows) {
     enabledMap.set(`${r.name}\x00${r.stream_url}`, r.enabled);
   }
-
-  db.prepare('DELETE FROM channels WHERE source_id=?').run(sourceId);
 
   const raw        = await plugin.syncChannels(sourceId, config, db);
   const normalised = normaliseChannels(raw, sourceId);
@@ -44,14 +42,38 @@ async function syncSource(sourceId, type, config) {
     if (enabledMap.has(key)) ch.enabled = enabledMap.get(key);
   }
 
-  const stmt = db.prepare(`
+  const existingByUrl = new Map(prevRows.map(r => [r.stream_url, r]));
+  const seenUrls = new Set();
+  const updateStmt = db.prepare(`
+    UPDATE channels SET
+      name=@name,
+      number=@number,
+      logo_url=@logo_url,
+      stream_type=@stream_type,
+      group_name=@group_name,
+      epg_id=@epg_id,
+      enabled=@enabled,
+      sort_order=@sort_order
+    WHERE id=@id
+  `);
+  const insertStmt = db.prepare(`
     INSERT INTO channels
       (source_id,name,number,logo_url,stream_url,stream_type,group_name,epg_id,enabled,sort_order)
     VALUES
       (@source_id,@name,@number,@logo_url,@stream_url,@stream_type,@group_name,@epg_id,@enabled,@sort_order)
   `);
-  const insertMany = db.transaction(chs => { for (const ch of chs) stmt.run(ch); });
-  insertMany(normalised);
+  const deleteStmt = db.prepare('DELETE FROM channels WHERE id=?');
+  db.transaction(chs => {
+    for (const ch of chs) {
+      const existing = existingByUrl.get(ch.stream_url);
+      seenUrls.add(ch.stream_url);
+      if (existing) updateStmt.run({ ...ch, id: existing.id });
+      else insertStmt.run(ch);
+    }
+    for (const row of prevRows) {
+      if (!seenUrls.has(row.stream_url)) deleteStmt.run(row.id);
+    }
+  })(normalised);
   return normalised;
 }
 

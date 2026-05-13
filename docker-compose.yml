@@ -1,4 +1,4 @@
-# PhiloProxy — docker compose
+# Philoproxy — docker compose
 #
 # Quick start:
 #   cp .env.example .env   # edit DATA_DIR, TZ, etc.
@@ -10,11 +10,11 @@
 services:
 
   # ── NVIDIA NVENC (default) ──────────────────────────────────────────────────
-  philoproxy:
-    image: ghcr.io/n3o2345/philoproxy:main
+  Philoproxy:
+    image: ghcr.io/n3o2345/Philoproxy:main
     # Or build locally:
     # build: .
-    container_name: philoproxy
+    container_name: Philoproxy
     runtime: nvidia
     deploy:
       resources:
@@ -37,6 +37,7 @@ services:
       PULSE_LATENCY_MSEC:      "30"
       # Philo — stream concurrency (one Xvfb display per stream)
       MAX_PHILO_STREAMS:       ${MAX_PHILO_STREAMS:-3}
+      STARTUP_MANIFEST_WAIT_MS: ${STARTUP_MANIFEST_WAIT_MS:-2500}
       # EPG background refresh
       EPG_REFRESH_HOURS:       ${EPG_REFRESH_HOURS:-6}
       # NVIDIA
@@ -62,10 +63,10 @@ services:
       - philo_data:/data
 
   # ── Intel QSV (opt-in) ──────────────────────────────────────────────────────
-  philoproxy-intel:
-    image: ghcr.io/n3o2345/philoproxy:main
+  Philoproxy-intel:
+    image: ghcr.io/n3o2345/Philoproxy:main
     # build: .
-    container_name: philoproxy
+    container_name: Philoproxy
     profiles: [intel]
     devices:
       - /dev/dri:/dev/dri
@@ -83,6 +84,7 @@ services:
       PULSE_COOKIE:       /dev/null
       PULSE_LATENCY_MSEC: "30"
       MAX_PHILO_STREAMS:  ${MAX_PHILO_STREAMS:-3}
+      STARTUP_MANIFEST_WAIT_MS: ${STARTUP_MANIFEST_WAIT_MS:-2500}
       EPG_REFRESH_HOURS:  ${EPG_REFRESH_HOURS:-6}
       LIBVA_DRIVER_NAME:  i965
       FFMPEG_VIDEO_CODEC: h264_qsv

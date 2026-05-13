@@ -1,4 +1,4 @@
-# PhiloProxy
+# Philoproxy
 
 A self-hosted proxy that authenticates with Philo (Widevine DRM), captures live
 TV via `x11grab`, and re-serves every channel as a standard HLS stream — no DRM
@@ -147,7 +147,7 @@ to the client.
 ## Troubleshooting
 
 **Stream never starts (60 s timeout)**
-Check `docker logs philoproxy`. The Playwright browser navigates to Philo and
+Check `docker logs Philoproxy`. The Playwright browser navigates to Philo and
 must complete auth before FFmpeg starts. Expired cookies → re-authenticate in
 Sources.
 

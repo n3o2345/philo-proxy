@@ -737,15 +737,7 @@ function savePhiloSource(sourceId, cookies, user, channels, ident, storageState)
   db.prepare(`UPDATE sources SET config=?, last_sync=datetime('now') WHERE id=?`)
     .run(JSON.stringify(config), sourceId);
 
-  db.prepare('DELETE FROM channels WHERE source_id=?').run(sourceId);
-  const stmt = db.prepare(`
-    INSERT INTO channels
-      (source_id,name,number,logo_url,stream_url,stream_type,group_name,epg_id,enabled,sort_order)
-    VALUES
-      (@source_id,@name,@number,@logo_url,@stream_url,@stream_type,@group_name,@epg_id,@enabled,@sort_order)
-  `);
-  const insertMany = db.transaction(chs => { for (const c of chs) stmt.run(c); });
-  insertMany(config.channels.map((ch, idx) => ({
+  const channelRows = config.channels.map((ch, idx) => ({
     source_id:   sourceId,
     name:        htmlDecode(ch.name),
     number:      ch.number    || null,
@@ -756,10 +748,52 @@ function savePhiloSource(sourceId, cookies, user, channels, ident, storageState)
     epg_id:      htmlDecode(ch.epg_id || ch.name),
     enabled:     1,
     sort_order:  idx,
-  })));
+  }));
+  upsertChannelsForSource(db, sourceId, channelRows);
 
   // Save EPG data from broadcasts
   savePhiloEpg(db, channels);
+}
+
+function upsertChannelsForSource(db, sourceId, channelRows) {
+  const prevRows = db.prepare('SELECT id, stream_url, enabled FROM channels WHERE source_id=?').all(sourceId);
+  const existingByUrl = new Map(prevRows.map(r => [r.stream_url, r]));
+  const seenUrls = new Set();
+
+  const updateStmt = db.prepare(`
+    UPDATE channels SET
+      name=@name,
+      number=@number,
+      logo_url=@logo_url,
+      stream_type=@stream_type,
+      group_name=@group_name,
+      epg_id=@epg_id,
+      enabled=@enabled,
+      sort_order=@sort_order
+    WHERE id=@id
+  `);
+  const insertStmt = db.prepare(`
+    INSERT INTO channels
+      (source_id,name,number,logo_url,stream_url,stream_type,group_name,epg_id,enabled,sort_order)
+    VALUES
+      (@source_id,@name,@number,@logo_url,@stream_url,@stream_type,@group_name,@epg_id,@enabled,@sort_order)
+  `);
+  const deleteStmt = db.prepare('DELETE FROM channels WHERE id=?');
+
+  db.transaction(rows => {
+    for (const row of rows) {
+      const existing = existingByUrl.get(row.stream_url);
+      seenUrls.add(row.stream_url);
+      if (existing) {
+        updateStmt.run({ ...row, enabled: existing.enabled, id: existing.id });
+      } else {
+        insertStmt.run(row);
+      }
+    }
+    for (const row of prevRows) {
+      if (!seenUrls.has(row.stream_url)) deleteStmt.run(row.id);
+    }
+  })(channelRows);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
