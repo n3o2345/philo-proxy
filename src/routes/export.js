@@ -62,7 +62,7 @@ router.get('/epg.xml', (req, res) => {
 
   let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
   xml    += '<!DOCTYPE tv SYSTEM "xmltv.dtd">\n';
-  xml    += '<tv generator-info-name="Philoproxy">\n';
+  xml    += '<tv generator-info-name="PhiloProxy">\n';
 
   for (const ch of channels) {
     if (!ch.epg_id) continue;
@@ -95,12 +95,12 @@ router.get('/epg.xml', (req, res) => {
 router.get('/discover.json', (req, res) => {
   const base = baseUrl(req);
   res.json({
-    FriendlyName:    'Philoproxy',
-    Manufacturer:    'Philoproxy',
+    FriendlyName:    'PhiloProxy',
+    Manufacturer:    'PhiloProxy',
     ModelNumber:     'HDTC-2US',
     FirmwareName:    'hdhomerun3_atsc',
     FirmwareVersion: '20200101',
-    DeviceID:        'Philoproxy0001',
+    DeviceID:        'PhiloProxy0001',
     DeviceAuth:      '',
     BaseURL:         base,
     LineupURL:       `${base}/lineup.json`,
@@ -116,12 +116,12 @@ router.get('/device.xml', (req, res) => {
   <URLBase>${base}</URLBase>
   <device>
     <deviceType>urn:schemas-upnp-org:device:MediaServer:1</deviceType>
-    <friendlyName>Philoproxy</friendlyName>
-    <manufacturer>Philoproxy</manufacturer>
+    <friendlyName>PhiloProxy</friendlyName>
+    <manufacturer>PhiloProxy</manufacturer>
     <modelName>HDTC-2US</modelName>
     <modelNumber>HDTC-2US</modelNumber>
-    <serialNumber>Philoproxy0001</serialNumber>
-    <UDN>uuid:Philoproxy-0001-0001-0001</UDN>
+    <serialNumber>PhiloProxy0001</serialNumber>
+    <UDN>uuid:PhiloProxy-0001-0001-0001</UDN>
   </device>
 </root>`);
 });

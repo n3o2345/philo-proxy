@@ -1,4 +1,4 @@
-# Philoproxy — docker compose
+# PhiloProxy — docker compose
 #
 # Quick start:
 #   cp .env.example .env   # edit DATA_DIR, TZ, etc.
@@ -10,11 +10,11 @@
 services:
 
   # ── NVIDIA NVENC (default) ──────────────────────────────────────────────────
-  Philoproxy:
-    image: ghcr.io/n3o2345/Philoproxy:main
+  philoproxy:
+    image: ghcr.io/n3o2345/philoproxy:main
     # Or build locally:
     # build: .
-    container_name: Philoproxy
+    container_name: philoproxy
     runtime: nvidia
     deploy:
       resources:
@@ -63,10 +63,10 @@ services:
       - philo_data:/data
 
   # ── Intel QSV (opt-in) ──────────────────────────────────────────────────────
-  Philoproxy-intel:
-    image: ghcr.io/n3o2345/Philoproxy:main
+  philoproxy-intel:
+    image: ghcr.io/n3o2345/philoproxy:main
     # build: .
-    container_name: Philoproxy
+    container_name: philoproxy
     profiles: [intel]
     devices:
       - /dev/dri:/dev/dri

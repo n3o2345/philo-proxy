@@ -171,7 +171,7 @@ function initDb() {
     );
   `);
 
-  console.log('[db] Philoproxy database initialized at', DB_PATH);
+  console.log('[db] PhiloProxy database initialized at', DB_PATH);
   return db;
 }
 

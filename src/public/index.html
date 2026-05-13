@@ -727,7 +727,7 @@ nav::-webkit-scrollbar-thumb { background: var(--border); }
 <!-- Sidebar -->
 <div id="sidebar">
   <div id="sidebar-header">
-    <div class="logo-mark">TV</div>
+    <div class="logo-mark">PP</div>
     <div class="brand-name">Philo<span>Proxy</span></div>
   </div>
   <nav>
@@ -825,7 +825,7 @@ function navigate(page) {
   if (page === 'sources') page = 'settings';
   if (['epg', 'webhooks', 'users'].includes(page)) page = 'dashboard';
   currentPage = page;
-  try { localStorage.setItem('Philoproxy_page', page); } catch(_) {}
+  try { localStorage.setItem('PhiloProxy_page', page); } catch(_) {}
   document.querySelectorAll('nav a').forEach(a => a.classList.toggle('active', a.dataset.page === page));
   document.getElementById('page-title').textContent = {
     dashboard:'Dashboard', guide:'TV Guide', channels:'Channels', maps:'Channel Maps',
@@ -994,7 +994,7 @@ async function renderGuide() {
 
 function toggleGuideSourceFilter(sourceId) {
   _guideSourceFilter = (_guideSourceFilter === sourceId) ? null : sourceId;
-  try { localStorage.setItem('Philoproxy_guideFilter', _guideSourceFilter === null ? '' : String(_guideSourceFilter)); } catch(_) {}
+  try { localStorage.setItem('PhiloProxy_guideFilter', _guideSourceFilter === null ? '' : String(_guideSourceFilter)); } catch(_) {}
   renderGuide();
 }
 
@@ -1013,7 +1013,7 @@ async function renderChannels() {
 
   // Restore persisted search
   try {
-    const saved = localStorage.getItem('Philoproxy_chSearch');
+    const saved = localStorage.getItem('PhiloProxy_chSearch');
     if (saved) { const el = document.getElementById('ch-search'); if (el) el.value = saved; }
   } catch(_) {}
 
@@ -1022,7 +1022,7 @@ async function renderChannels() {
 
 function filterChannels() {
   const q = document.getElementById('ch-search')?.value.toLowerCase() || '';
-  try { localStorage.setItem('Philoproxy_chSearch', document.getElementById('ch-search')?.value || ''); } catch(_) {}
+  try { localStorage.setItem('PhiloProxy_chSearch', document.getElementById('ch-search')?.value || ''); } catch(_) {}
   const filtered = q ? _channels.filter(c => c.name.toLowerCase().includes(q) || (c.group_name||'').toLowerCase().includes(q)) : _channels;
   renderChannelList(filtered);
 }
@@ -1181,7 +1181,7 @@ async function renderMaps() {
   `;
   // Restore saved market context
   try {
-    const saved = JSON.parse(localStorage.getItem('Philoproxy_marketCtx') || '{}');
+    const saved = JSON.parse(localStorage.getItem('PhiloProxy_marketCtx') || '{}');
     if (saved.market_type) { document.getElementById('global-market-type').value = saved.market_type; _mapSettings.market_type = saved.market_type; }
     if (saved.market_name) { document.getElementById('global-market-name').value = saved.market_name; _mapSettings.market_name = saved.market_name; }
   } catch(_) {}
@@ -1193,7 +1193,7 @@ async function renderMaps() {
 function _saveMarketCtx() {
   _mapSettings.market_type = document.getElementById('global-market-type')?.value || '';
   _mapSettings.market_name = document.getElementById('global-market-name')?.value || '';
-  try { localStorage.setItem('Philoproxy_marketCtx', JSON.stringify(_mapSettings)); } catch(_) {}
+  try { localStorage.setItem('PhiloProxy_marketCtx', JSON.stringify(_mapSettings)); } catch(_) {}
 }
 
 function _renderMapList() {
@@ -2422,13 +2422,6 @@ async function showAddSource() {
         <input id="add-color" type="color" value="${defaultColor}" style="height:38px;padding:2px 4px;cursor:pointer" />
       </div>
     </div>
-    <div class="form-group">
-      <label>EPG Source (optional)</label>
-      <select id="add-epg-source">
-        <option value=""> None </option>
-        ${(_epgSources||[]).map(e => `<option value="${e.id}">${esc(e.name)}</option>`).join('')}
-      </select>
-    </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
       <button class="btn btn-primary" id="add-source-btn" onclick="addSource()">Add Source</button>
@@ -2478,13 +2471,6 @@ async function showEditSource(id) {
       </div>
     </div>
     <div class="form-group">
-      <label>EPG Source</label>
-      <select id="edit-epg-source">
-        <option value=""> None </option>
-        ${_epgSources.map(e => `<option value="${e.id}" ${s.epg_source_id == e.id ? 'selected' : ''}>${esc(e.name)}</option>`).join('')}
-      </select>
-    </div>
-    <div class="form-group">
       <label>Status</label>
       <select id="edit-enabled">
         <option value="1" ${s.enabled ? 'selected' : ''}>Active</option>
@@ -2503,8 +2489,6 @@ async function saveEditSource(id) {
   const name          = document.getElementById('edit-name')?.value?.trim();
   const max_streams   = parseInt(document.getElementById('edit-max-streams')?.value || '0');
   const color         = document.getElementById('edit-color')?.value || null;
-  const epg_raw       = document.getElementById('edit-epg-source')?.value;
-  const epg_source_id = epg_raw ? parseInt(epg_raw) : null;
   const enabled       = parseInt(document.getElementById('edit-enabled')?.value ?? '1');
   if (!name) return toast('Name required', 'error');
 
@@ -2518,7 +2502,7 @@ async function saveEditSource(id) {
   }
 
   try {
-    const body = { name, max_streams, color, epg_source_id, enabled };
+    const body = { name, max_streams, color, enabled };
     if (config !== null) body.config = JSON.stringify(config);
     await api(`/api/sources/${id}`, { method: 'PUT', body: JSON.stringify(body) });
     toast('Source updated');
@@ -2581,8 +2565,6 @@ async function addSource() {
   const name          = document.getElementById('add-name')?.value?.trim();
   const max_streams   = parseInt(document.getElementById('add-max-streams')?.value || '0');
   const color         = document.getElementById('add-color')?.value || null;
-  const epg_raw       = document.getElementById('add-epg-source')?.value;
-  const epg_source_id = epg_raw ? parseInt(epg_raw) : null;
 
   if (!name) return toast('Name required', 'error');
 
@@ -2603,7 +2585,7 @@ async function addSource() {
   if (btn) { btn.disabled = true; btn.textContent = 'Adding'; }
 
   try {
-    const res = await api('/api/sources', { method: 'POST', body: JSON.stringify({ name, type, config, max_streams, color, epg_source_id }) });
+    const res = await api('/api/sources', { method: 'POST', body: JSON.stringify({ name, type, config, max_streams, color }) });
     if (res.warning) {
       toast(`Added "${name}" with warning: ${res.warning}`, 'error');
     } else {
@@ -2951,7 +2933,7 @@ function renderExport() {
       <ol style="padding-left:20px;line-height:2.2;color:var(--text-dim);font-size:13px">
         <li>In Plex, go to <b>Settings  Live TV & DVR  Set Up Plex DVR</b></li>
         <li>Choose <b>Network Tuner</b> and enter <code style="background:var(--surface2);padding:1px 5px;border-radius:4px">${base}</code></li>
-        <li>Plex will auto-detect Philoproxy via the HDHomeRun emulation</li>
+        <li>Plex will auto-detect PhiloProxy via the HDHomeRun emulation</li>
         <li>Set your EPG source to <code style="background:var(--surface2);padding:1px 5px;border-radius:4px">${base}/epg.xml</code></li>
       </ol>
     </div>
@@ -3006,23 +2988,21 @@ async function renderSettings() {
   tb.innerHTML = '';
   const c = document.getElementById('content');
 
-  // Load server-side settings, source, plugin metadata, and EPG sources
-  let serverSettings = {}, epgSources = [], sources = [], pluginTypes = [];
+  // Load server-side settings, source, and plugin metadata
+  let serverSettings = {}, sources = [], pluginTypes = [];
   try { serverSettings = await api('/api/settings'); } catch(_) {}
-  try { epgSources = await api('/api/epg/sources'); } catch(_) {}
   try { sources = await api('/api/sources'); } catch(_) {}
   try { pluginTypes = await api('/api/sources/plugin-types'); } catch(_) {}
   _sources = sources;
-  _epgSources = epgSources;
+  _epgSources = [];
   _pluginTypes = pluginTypes;
 
-  const defaultEpgHours   = parseInt(serverSettings.epg_refresh_hours   || '6',  10);
   const defaultSyncHours  = parseInt(serverSettings.sync_refresh_hours  || '12', 10);
   const sourceControls = sources.length ? `
     <div class="card">
       <div class="card-title" style="margin-bottom:14px">Source</div>
       <table>
-        <thead><tr><th>Name</th><th>Type</th><th>Max Streams</th><th>EPG</th><th>Last Sync</th><th>Status</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Name</th><th>Type</th><th>Max Streams</th><th>Last Sync</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>${sources.map(s => sourceSettingsRow(s)).join('')}</tbody>
       </table>
     </div>
@@ -3039,7 +3019,7 @@ async function renderSettings() {
     <div class="card">
       <div class="card-title" style="margin-bottom:4px"> Refresh Intervals</div>
       <p style="color:var(--muted);font-size:12px;margin-bottom:16px">
-        Controls how often Philoproxy automatically fetches updated data in the background.
+        Controls how often PhiloProxy automatically fetches updated data in the background.
       </p>
 
       <div style="display:grid;gap:14px">
@@ -3079,7 +3059,6 @@ async function renderSettings() {
 }
 
 function sourceSettingsRow(s) {
-  const epg   = _epgSources.find(e => e.id === s.epg_source_id);
   const color = s.color || SOURCE_COLORS[_sources.findIndex(x => x.id === s.id) % SOURCE_COLORS.length];
   const plugin = (_pluginTypes || []).find(p => p.type === s.type);
   const hasEpg = plugin?.hasEpg || s.type === 'philo';
@@ -3093,7 +3072,6 @@ function sourceSettingsRow(s) {
     </td>
     <td><span class="pill" style="font-family:'DM Mono',monospace">${esc(s.type)}</span></td>
     <td style="color:var(--text-dim);font-size:12px;font-family:'DM Mono',monospace">${(s.max_streams > 0) ? s.max_streams : '<span style="color:var(--muted)">inf</span>'}</td>
-    <td style="color:var(--text-dim);font-size:12px">${epg ? esc(epg.name) : '<span style="color:var(--muted)">--</span>'}</td>
     <td style="color:var(--muted);font-size:11px;font-family:'DM Mono',monospace">${lastSync}</td>
     <td><span class="badge ${s.enabled ? 'green' : 'gray'}">${s.enabled ? 'Active' : 'Disabled'}</span></td>
     <td style="white-space:nowrap">
@@ -3408,7 +3386,7 @@ async function renderWebhooks() {
     <div class="card">
       <div class="card-title" style="margin-bottom:4px"> Webhooks</div>
       <p style="color:var(--muted);font-size:12px;margin-bottom:16px">
-        Fire HTTP POST callbacks when Philoproxy stream events occur.
+        Fire HTTP POST callbacks when PhiloProxy stream events occur.
         Supports: ${WEBHOOK_EVENTS.map(e => `<code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:11px">${e}</code>`).join(' ')}
       </p>
       ${hooks.length === 0 ? `<div class="empty-state" style="padding:20px"><p>No webhooks configured yet.</p></div>` : `
@@ -3449,7 +3427,7 @@ async function renderWebhooks() {
   "detail": {}
 }</pre>
       <p style="color:var(--muted);font-size:12px;margin-top:8px">
-        If a secret is set, it is sent as the <code>X-Philoproxy-Secret</code> header. Failed deliveries retry up to 3 times with 5-second delays.
+        If a secret is set, it is sent as the <code>X-PhiloProxy-Secret</code> header. Failed deliveries retry up to 3 times with 5-second delays.
       </p>
     </div>
   `;
@@ -3466,7 +3444,7 @@ function showCreateWebhookModal() {
       <div><label style="font-size:12px;color:var(--muted)">Events (comma-separated, or * for all)</label>
         <input id="wh-events" type="text" value="*" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
       <div><label style="font-size:12px;color:var(--muted)">Secret (optional)</label>
-        <input id="wh-secret" type="text" placeholder="Sent as X-Philoproxy-Secret header" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
+        <input id="wh-secret" type="text" placeholder="Sent as X-PhiloProxy-Secret header" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" /></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
@@ -3559,7 +3537,7 @@ async function renderUsers() {
   let users = [], me = null;
   try { users = await api('/api/users'); } catch(e) {
     if (e.message.includes('401') || e.message.includes('403')) {
-      c.innerHTML = `<div class="card"><p style="color:var(--muted)"> No users exist yet  Philoproxy is in open-access mode. Create the first admin account to enable authentication.</p>
+      c.innerHTML = `<div class="card"><p style="color:var(--muted)"> No users exist yet  PhiloProxy is in open-access mode. Create the first admin account to enable authentication.</p>
         <button class="btn btn-primary" style="margin-top:12px" onclick="showCreateUserModal()"> Create First Admin</button></div>`;
       return;
     }
@@ -3702,11 +3680,11 @@ async function doLogout() {
 // 
 //  Restore persisted UI state then boot 
 try {
-  const savedFilter = localStorage.getItem('Philoproxy_guideFilter');
+  const savedFilter = localStorage.getItem('PhiloProxy_guideFilter');
   if (savedFilter) _guideSourceFilter = parseInt(savedFilter, 10) || null;
 } catch(_) {}
 
-const _startPage = (() => { try { return localStorage.getItem('Philoproxy_page') || 'dashboard'; } catch(_) { return 'dashboard'; } })();
+const _startPage = (() => { try { return localStorage.getItem('PhiloProxy_page') || 'dashboard'; } catch(_) { return 'dashboard'; } })();
 navigate(_startPage);
 </script>
 </body>
