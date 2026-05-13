@@ -484,19 +484,18 @@ async function _startPhiloFfmpegX11grab(display, pulseSink, channelName, channel
 
   const args = [
     '-hide_banner', '-loglevel', 'warning',
-    // Audio first — lets FFmpeg buffer a few frames before video starts, avoiding initial drift
+    // Capture video first so HLS clients see a conventional video-primary TS.
+    '-thread_queue_size', '4096',
+    '-use_wallclock_as_timestamps', '1',
+    '-f', 'x11grab', '-video_size', '1280x720', '-framerate', '30', '-i', display,
     '-thread_queue_size', '4096',
     '-use_wallclock_as_timestamps', '1',
     '-f', 'pulse', '-sample_rate', '48000', '-channels', '2',
     '-i', audioDevice,
-    // Video: x11grab
-    '-thread_queue_size', '4096',
-    '-use_wallclock_as_timestamps', '1',
-    '-f', 'x11grab', '-video_size', '1280x720', '-framerate', '30', '-i', display,
     ...videoArgs,
     '-c:a', 'aac', '-b:a', '128k', '-ar', '48000',
     '-af', 'aresample=async=9600:min_hard_comp=0.1:first_pts=0',
-    '-map', '0:a', '-map', '1:v',
+    '-map', '0:v', '-map', '1:a',
     '-fflags', '+genpts+discardcorrupt+igndts',
     '-max_interleave_delta', '0',
     '-f', 'hls',

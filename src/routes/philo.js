@@ -1084,6 +1084,9 @@ async function ensurePhiloPlayback(page) {
           paused: video ? video.paused : null,
           ended: video ? video.ended : null,
           currentTime: video ? video.currentTime : null,
+          videoFrames: video && video.getVideoPlaybackQuality
+            ? video.getVideoPlaybackQuality().totalVideoFrames
+            : null,
           videoWidth: video ? video.videoWidth : null,
           videoHeight: video ? video.videoHeight : null,
         };
@@ -1097,14 +1100,38 @@ async function ensurePhiloPlayback(page) {
       }
       if (last.videoCount && last.readyState >= 2 && last.videoWidth > 0 && last.videoHeight > 0) {
         const t0 = last.currentTime || 0;
-        await page.waitForTimeout(1500);
-        const t1 = await page.evaluate(() => {
+        const f0 = last.videoFrames;
+        await page.waitForTimeout(2000);
+        const after = await page.evaluate(() => {
           const v = document.querySelector('video');
           if (!v) return null;
           if (v.paused || v.ended) v.play().catch(() => {});
-          return v.currentTime;
+          return {
+            currentTime: v.currentTime,
+            videoFrames: v.getVideoPlaybackQuality ? v.getVideoPlaybackQuality().totalVideoFrames : null,
+            paused: v.paused,
+            readyState: v.readyState,
+          };
         }).catch(() => null);
-        return { ready: true, advanced: t1 != null ? t1 > t0 : null, ...last, currentTimeAfterWait: t1 };
+        const timeAdvanced = after?.currentTime != null && after.currentTime > t0 + 0.25;
+        const framesAdvanced = after?.videoFrames != null && f0 != null && after.videoFrames > f0;
+        if (timeAdvanced || framesAdvanced) {
+          return {
+            ready: true,
+            advanced: true,
+            ...last,
+            currentTimeAfterWait: after.currentTime,
+            videoFramesAfterWait: after.videoFrames,
+          };
+        }
+        last = {
+          ...last,
+          reason: 'video-not-advancing',
+          currentTimeAfterWait: after?.currentTime ?? null,
+          videoFramesAfterWait: after?.videoFrames ?? null,
+          pausedAfterWait: after?.paused ?? null,
+          readyStateAfterWait: after?.readyState ?? null,
+        };
       }
     } catch (err) {
       last = { reason: err.message, url: page.url() };
