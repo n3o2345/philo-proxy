@@ -990,8 +990,15 @@ async function navigateToChannel(channelId, cookies, broadcastId, display, pulse
   } catch (_) {}
   console.log(`[philo] Landed on: ${page.url()}`);
 
-  // 6. Inject fullscreen CSS + CDP window bounds immediately
-  //    Do this before waiting for video -- x11grab starts right after this returns
+  // 6. Make sure the player actually starts before x11grab/FFmpeg capture begins.
+  const playback = await ensurePhiloPlayback(page);
+  console.log(`[philo] Playback check: ${JSON.stringify(playback)}`);
+  if (!playback.ready) {
+    const where = playback.url || page.url();
+    throw new Error(`Philo player did not start video (${playback.reason || 'unknown'}) at ${where}`);
+  }
+
+  // 7. Inject fullscreen CSS + CDP window bounds after playback starts.
   try {
     await page.evaluate(() => {
       if (document.getElementById('philoproxy-fullscreen')) return;
@@ -1028,18 +1035,10 @@ async function navigateToChannel(channelId, cookies, broadcastId, display, pulse
     try { await page.keyboard.press('F11'); } catch (_) {}
   }
 
-  // 7. Click play (once, no waiting between retries)
   try {
     await page.evaluate(() => {
-      const sels = ['[aria-label^="Play live"]','[aria-label*="Watch"]',
-                    'button[class*="play"]','button[class*="Play"]',
-                    '[class*="playButton"]','[class*="PlayButton"]'];
-      for (const sel of sels) {
-        for (const el of document.querySelectorAll(sel)) {
-          const t = (el.textContent || el.getAttribute('aria-label') || '').toLowerCase();
-          if (['watch live','watch','live','play'].some(w => t.includes(w))) { el.click(); return; }
-        }
-      }
+      const v = document.querySelector('video');
+      if (v) { v.muted = false; v.volume = 1.0; if (v.paused) v.play().catch(() => {}); }
     });
   } catch (_) {}
 
@@ -1052,6 +1051,96 @@ async function navigateToChannel(channelId, cookies, broadcastId, display, pulse
 
   console.log('[philo] Browser ready for x11grab capture');
   return { page, context, display };
+}
+
+async function ensurePhiloPlayback(page) {
+  const deadline = Date.now() + 35000;
+  let last = null;
+
+  while (Date.now() < deadline) {
+    try {
+      await clickPhiloPlaybackControls(page);
+      last = await page.evaluate(() => {
+        const bodyText = (document.body?.innerText || '').replace(/\s+/g, ' ').slice(0, 220);
+        const videos = [...document.querySelectorAll('video')];
+        const video = videos.find(v => v.videoWidth || v.readyState > 0) || videos[0] || null;
+        if (video) {
+          video.muted = false;
+          video.volume = 1.0;
+          if (video.paused || video.ended) video.play().catch(() => {});
+        }
+        const isLoginPage = window.location.href.includes('/login') || window.location.href.includes('/authenticate');
+        const hasSignInBtn = !!document.querySelector('[data-testid="sign-in"], button[class*="signIn"]');
+        const hasErrorCode = /Error\s+code:\s*philo-\d+/i.test(document.body?.innerText || '');
+        return {
+          url: window.location.href,
+          title: document.title,
+          isLoginPage,
+          hasSignInBtn,
+          hasErrorCode,
+          bodyText,
+          videoCount: videos.length,
+          readyState: video ? video.readyState : null,
+          paused: video ? video.paused : null,
+          ended: video ? video.ended : null,
+          currentTime: video ? video.currentTime : null,
+          videoWidth: video ? video.videoWidth : null,
+          videoHeight: video ? video.videoHeight : null,
+        };
+      });
+
+      if (last.isLoginPage || last.hasSignInBtn) {
+        return { ready: false, reason: 'login-wall', ...last };
+      }
+      if (last.hasErrorCode) {
+        return { ready: false, reason: 'philo-error', ...last };
+      }
+      if (last.videoCount && last.readyState >= 2 && last.videoWidth > 0 && last.videoHeight > 0) {
+        const t0 = last.currentTime || 0;
+        await page.waitForTimeout(1500);
+        const t1 = await page.evaluate(() => {
+          const v = document.querySelector('video');
+          if (!v) return null;
+          if (v.paused || v.ended) v.play().catch(() => {});
+          return v.currentTime;
+        }).catch(() => null);
+        return { ready: true, advanced: t1 != null ? t1 > t0 : null, ...last, currentTimeAfterWait: t1 };
+      }
+    } catch (err) {
+      last = { reason: err.message, url: page.url() };
+    }
+    await page.waitForTimeout(1000);
+  }
+
+  return { ready: false, reason: 'timeout-waiting-for-video', ...(last || {}), url: page.url() };
+}
+
+async function clickPhiloPlaybackControls(page) {
+  try {
+    await page.evaluate(() => {
+      const wanted = ['watch live', 'watch', 'play live', 'play', 'resume', 'continue', 'start watching'];
+      const candidates = [
+        ...document.querySelectorAll('button, [role="button"], a, [aria-label], [data-testid]')
+      ];
+      for (const el of candidates) {
+        const style = window.getComputedStyle(el);
+        const rect = el.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0 || style.visibility === 'hidden' || style.display === 'none') continue;
+        const text = `${el.textContent || ''} ${el.getAttribute('aria-label') || ''} ${el.getAttribute('data-testid') || ''}`.toLowerCase();
+        if (wanted.some(w => text.includes(w))) {
+          el.click();
+          return;
+        }
+      }
+      const video = document.querySelector('video');
+      if (video) {
+        video.click();
+        video.muted = false;
+        video.volume = 1.0;
+        if (video.paused) video.play().catch(() => {});
+      }
+    });
+  } catch (_) {}
 }
 
 function normaliseStorageState(storageState, cookies) {
