@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Philoproxy</title>
+<title>PhiloProxy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -728,7 +728,7 @@ nav::-webkit-scrollbar-thumb { background: var(--border); }
 <div id="sidebar">
   <div id="sidebar-header">
     <div class="logo-mark">TV</div>
-    <div class="brand-name">TV<span>Now</span></div>
+    <div class="brand-name">Philo<span>Proxy</span></div>
   </div>
   <nav>
     <div class="nav-section">Main</div>
@@ -736,13 +736,9 @@ nav::-webkit-scrollbar-thumb { background: var(--border); }
     <a data-page="guide"    onclick="navigate('guide')"><span class="nav-icon">▦</span> Guide</a>
     <a data-page="channels" onclick="navigate('channels')"><span class="nav-icon">≡</span> Channels</a>
     <a data-page="maps"     onclick="navigate('maps')"><span class="nav-icon">⇄</span> Channel Maps</a>
-    <div class="nav-section">Data</div>
-    <a data-page="epg"      onclick="navigate('epg')"><span class="nav-icon">◷</span> EPG Sources</a>
     <div class="nav-section">System</div>
     <a data-page="health"   onclick="navigate('health')"><span class="nav-icon">♥</span> Stream Health</a>
     <a data-page="transcode" onclick="navigate('transcode')"><span class="nav-icon">⚙</span> Transcode</a>
-    <a data-page="webhooks" onclick="navigate('webhooks')"><span class="nav-icon">⚡</span> Webhooks</a>
-    <a data-page="users"    onclick="navigate('users')"><span class="nav-icon">◎</span> Users</a>
     <a data-page="export"   onclick="navigate('export')"><span class="nav-icon">↗</span> Export</a>
     <a data-page="logs"     onclick="navigate('logs')"><span class="nav-icon">▤</span> Logs</a>
     <a data-page="settings" onclick="navigate('settings')"><span class="nav-icon">⊛</span> Settings</a>
@@ -827,14 +823,14 @@ function modal(html, { onConfirm, title } = {}) {
 // 
 function navigate(page) {
   if (page === 'sources') page = 'settings';
+  if (['epg', 'webhooks', 'users'].includes(page)) page = 'dashboard';
   currentPage = page;
   try { localStorage.setItem('Philoproxy_page', page); } catch(_) {}
   document.querySelectorAll('nav a').forEach(a => a.classList.toggle('active', a.dataset.page === page));
   document.getElementById('page-title').textContent = {
     dashboard:'Dashboard', guide:'TV Guide', channels:'Channels', maps:'Channel Maps',
-    epg:'EPG Sources', export:'Export', logs:'System Logs',
+    export:'Export', logs:'System Logs',
     settings:'Settings', health:'Stream Health', transcode:'Transcode Profiles',
-    webhooks:'Webhooks', users:'User Management',
   }[page] || page;
   document.getElementById('topbar-actions').innerHTML = '';
   renderPage(page);
@@ -842,6 +838,7 @@ function navigate(page) {
 
 async function renderPage(page) {
   if (page === 'sources') page = 'settings';
+  if (['epg', 'webhooks', 'users'].includes(page)) page = 'dashboard';
   const c = document.getElementById('content');
   c.innerHTML = '<div class="empty-state" style="padding:40px 20px"><div style="color:var(--muted);font-size:13px">Loading…</div></div>';
   try {
@@ -849,11 +846,8 @@ async function renderPage(page) {
     if (page === 'guide')     await renderGuide();
     if (page === 'channels')  await renderChannels();
     if (page === 'maps')      await renderMaps();
-    if (page === 'epg')       await renderEpgSources();
     if (page === 'health')    await renderStreamHealth();
     if (page === 'transcode') await renderTranscodeProfiles();
-    if (page === 'webhooks')  await renderWebhooks();
-    if (page === 'users')     await renderUsers();
     if (page === 'export')    renderExport();
     if (page === 'logs')      await renderLogs();
     if (page === 'settings')  await renderSettings();
@@ -876,41 +870,13 @@ async function renderDashboard() {
   _channels = channels;
 
   const enabled   = channels.filter(c => c.enabled).length;
-  const srcActive = sources.filter(s => s.enabled).length;
-
   const c = document.getElementById('content');
   c.innerHTML = `
     <div class="stat-grid" style="margin-bottom:20px">
-      <div class="stat-box"><div class="label">Sources</div><div class="value">${sources.length}</div><div class="sub">${srcActive} active</div></div>
       <div class="stat-box"><div class="label">Channels</div><div class="value">${channels.length}</div><div class="sub">${enabled} enabled</div></div>
       <div class="stat-box" style="cursor:pointer" onclick="navigate('health')"><div class="label">Active Streams</div><div class="value">${health.active_streams}</div><div class="sub">live viewers</div></div>
       <div class="stat-box"><div class="label">Uptime</div><div class="value" id="uptime-val">${sys ? _fmtUptime(sys.uptime) : ''}</div><div class="sub">server</div></div>
       ${sys?.gpu ? `<div class="stat-box"><div class="label">GPU</div><div class="value">${sys.gpu.gpuPct}%</div><div class="sub">${sys.gpu.name}</div></div>` : ''}
-    </div>
-
-    <div class="card">
-      <div class="card-header"><div class="card-title">Source</div><button class="btn btn-secondary btn-sm" onclick="navigate('settings')">Manage →</button></div>
-      ${sources.length === 0 ? '<div class="empty-state" style="padding:20px"><p>No source configured yet. Open <a href="#" onclick="navigate(\'settings\')">Settings</a>.</p></div>' : `
-      <table>
-        <thead><tr><th>Name</th><th>Type</th><th>Channels</th><th>Last Sync</th><th>Status</th></tr></thead>
-        <tbody>${sources.map(s => {
-          const chs = channels.filter(c => c.source_id === s.id).length;
-          const color = s.color || SOURCE_COLORS[sources.findIndex(x=>x.id===s.id) % SOURCE_COLORS.length];
-          const lastSync = s.last_sync ? new Date(s.last_sync).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
-          return `<tr>
-            <td>
-              <div style="display:flex;align-items:center;gap:8px">
-                <span style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0"></span>
-                <span style="font-weight:600">${esc(s.name)}</span>
-              </div>
-            </td>
-            <td><span class="pill" style="font-family:'DM Mono',monospace">${esc(s.type)}</span></td>
-            <td style="font-family:'DM Mono',monospace;font-size:12px">${chs}</td>
-            <td style="color:var(--muted);font-size:11px;font-family:'DM Mono',monospace">${lastSync}</td>
-            <td><span class="badge ${s.enabled ? 'green' : 'gray'}">${s.enabled ? 'Active' : 'Disabled'}</span></td>
-          </tr>`;
-        }).join('')}</tbody>
-      </table>`}
     </div>
 
     ${sys ? `<div class="card">
@@ -3088,35 +3054,6 @@ async function renderSettings() {
               style="width:60px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;text-align:center" />
             <span style="color:var(--muted);font-size:12px">hr</span>
           </div>
-        </div>
-
-        <div style="padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${epgSources.length ? 12 : 0}px">
-            <div>
-              <div style="font-weight:500;margin-bottom:2px">EPG program guide refresh</div>
-              <div style="font-size:12px;color:var(--muted)">Per-source schedule  edit each source's interval below</div>
-            </div>
-          </div>
-          ${epgSources.length ? `
-          <table style="width:100%;font-size:13px;border-collapse:collapse">
-            <thead><tr style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px">
-              <th style="text-align:left;padding:4px 8px 6px 0;font-weight:500">EPG Source</th>
-              <th style="text-align:left;padding:4px 8px 6px;font-weight:500">Last Fetched</th>
-              <th style="text-align:right;padding:4px 0 6px 8px;font-weight:500">Every</th>
-            </tr></thead>
-            <tbody>${epgSources.map(s => `<tr style="border-top:1px solid var(--border)">
-              <td style="padding:7px 8px 7px 0;font-weight:500">${esc(s.name)}</td>
-              <td style="padding:7px 8px;color:var(--muted);font-size:12px">${s.last_fetch ? new Date(s.last_fetch).toLocaleString() : 'Never'}</td>
-              <td style="padding:7px 0 7px 8px;text-align:right">
-                <div style="display:inline-flex;align-items:center;gap:5px">
-                  <input type="number" min="1" max="168" value="${s.refresh_hours || 6}"
-                    style="width:52px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:12px;text-align:center"
-                    onchange="setEpgRefreshHours(${s.id}, this.value)" />
-                  <span style="color:var(--muted);font-size:11px">hr</span>
-                </div>
-              </td>
-            </tr>`).join('')}</tbody>
-          </table>` : '<p style="color:var(--muted);font-size:12px;margin:0">No EPG sources configured yet. <a onclick="navigate(\'epg\')" style="cursor:pointer;color:var(--accent)">Add one </a></p>'}
         </div>
 
       </div>
