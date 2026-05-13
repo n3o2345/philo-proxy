@@ -397,9 +397,28 @@ async function _browserVerifyCode(code) {
   try {
     console.log('[philo] Verify page URL:', page.url());
 
-    // Wait for the OTP input
-    const inp = await page.waitForSelector('input', { timeout: 10000 });
-    await inp.click();
+    // Wait for the OTP input. Philo has changed this markup a few times, so
+    // prefer explicit code fields and fall back to the last visible input.
+    const inputSelectors = [
+      'input[autocomplete="one-time-code"]',
+      'input[inputmode="numeric"]',
+      'input[name*="code" i]',
+      'input[id*="code" i]',
+      'input[placeholder*="code" i]',
+      'input[type="tel"]',
+      'input:not([type="hidden"])',
+    ];
+    let inp = null;
+    for (const sel of inputSelectors) {
+      const loc = page.locator(sel).last();
+      try {
+        await loc.waitFor({ state: 'visible', timeout: 2500 });
+        inp = loc;
+        break;
+      } catch (_) {}
+    }
+    if (!inp) throw new Error('Verification code input not found');
+    await inp.click({ clickCount: 3 });
     await inp.fill(code);
     console.log('[philo] Filled OTP:', code);
 
@@ -427,17 +446,31 @@ async function _browserVerifyCode(code) {
       await page.keyboard.press('Enter');
     }
 
-    await page.waitForTimeout(4000);
+    await page.waitForTimeout(1000);
+    try {
+      await page.waitForFunction(() => {
+        const hasError = !!document.querySelector('[class*="error" i], [role="alert"]');
+        const leftLogin = !window.location.href.includes('/login') && !window.location.href.includes('/authenticate');
+        return hasError || leftLogin;
+      }, { timeout: 15000 });
+    } catch (_) {}
+
     const currentUrl = page.url();
     console.log('[philo] After verify URL:', currentUrl);
 
-    // Still on login page = wrong code
+    const errText = await page.evaluate(() => {
+      const el = document.querySelector('[class*="error" i], [role="alert"]');
+      return el ? el.innerText.trim().slice(0, 200) : null;
+    });
+    if (errText) return { ok: false, error: errText };
+
+    // Still on login page with no Philo cookies = wrong code or expired code.
     if (currentUrl.includes('login') || currentUrl.includes('authenticate')) {
-      const errText = await page.evaluate(() => {
-        const el = document.querySelector('[class*="error" i], [role="alert"]');
-        return el ? el.innerText.trim().slice(0, 200) : null;
-      }) || 'Still on login page -- code wrong or expired';
-      return { ok: false, error: errText };
+      const loginCookies = await context.cookies();
+      const loginCookieStr = philoCookiesAsString(loginCookies);
+      if (!loginCookieStr) {
+        return { ok: false, error: 'Still on login page -- code wrong or expired' };
+      }
     }
 
     // Success -- extract cookies from browser context

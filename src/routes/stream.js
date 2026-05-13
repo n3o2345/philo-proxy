@@ -458,6 +458,8 @@ async function _startPhiloX11grab(channel, config, philoChannelId, broadcastId, 
     console.log(`[stream] Philo ch${channelId}: browser ready on ${display}`);
   } catch (err) {
     console.error(`[stream] Philo ch${channelId} nav error: ${err.message}`);
+    _destroyPhiloSession(channelId, session);
+    return;
   }
 
   _startPhiloFfmpegX11grab(display, pulseSink, channel.name, channelId, session, hlsDir);

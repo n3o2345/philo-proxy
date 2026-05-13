@@ -1094,9 +1094,9 @@ function renderChannelList(channels) {
               <div class="name">${esc(ch.name)}</div>
               ${ch.group_name ? `<div class="group">${unesc(ch.group_name)}</div>` : ''}
             </div>
-            <div style="margin-left:auto;display:flex;flex-direction:column;gap:4px">
-              <button class="btn btn-sm btn-secondary btn-icon" onclick="toggleChannel(${ch.id})" title="${ch.enabled ? 'Disable' : 'Enable'}">${ch.enabled ? '' : '-'}</button>
-              <button class="btn btn-sm btn-secondary btn-icon" onclick="playChannel(${ch.id})" title="Play stream">-</button>
+            <div style="margin-left:auto;display:flex;flex-direction:column;gap:4px;align-items:stretch">
+              <button class="btn btn-sm btn-secondary" onclick="toggleChannel(${ch.id})" title="${ch.enabled ? 'Disable channel' : 'Enable channel'}">${ch.enabled ? 'Disable' : 'Enable'}</button>
+              <button class="btn btn-sm btn-primary" onclick="playChannel(${ch.id})" title="Play stream">Play</button>
             </div>
           </div>
         `).join('')}
@@ -1113,35 +1113,81 @@ async function toggleChannel(id) {
 }
 
 function playChannel(id) {
-  const url = `${window.location.origin}/stream/${id}`;
-  // Try to open in a video player  use an in-page modal with a video tag for HLS
+  const idText = String(id);
+  const url = idText.startsWith('map/')
+    ? `${window.location.origin}/stream/${idText}`
+    : `${window.location.origin}/stream/${idText}/philo.m3u8`;
+  // Preview HLS in-page when possible, with Hls.js fallback for Chromium browsers.
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.innerHTML = `
     <div class="modal" style="max-width:720px;width:95%">
       <div class="modal-header">
-        <div class="modal-title">- Stream Preview</div>
-        <button class="btn btn-icon btn-secondary" onclick="this.closest('.modal-overlay').remove()"></button>
+        <div class="modal-title">Stream Preview</div>
+        <button class="btn btn-icon btn-secondary" onclick="closePreview(this.closest('.modal-overlay'))">Close</button>
       </div>
-      <video id="preview-video" controls autoplay style="width:100%;border-radius:8px;background:#000;min-height:200px" src="${url}"></video>
+      <video id="preview-video" controls autoplay playsinline style="width:100%;border-radius:8px;background:#000;min-height:200px"></video>
+      <div id="preview-status" style="margin-top:8px;color:var(--muted);font-size:12px">Starting stream...</div>
       <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         <span style="color:var(--muted);font-size:12px;flex:1;word-break:break-all">${url}</span>
         <button class="btn btn-sm btn-secondary" onclick="navigator.clipboard.writeText('${url}').then(()=>toast('URL copied!'))">Copy URL</button>
         <a href="${url}" target="_blank" class="btn btn-sm btn-secondary">Open in Browser</a>
         <a href="vlc://${url}" class="btn btn-sm btn-secondary">Open in VLC</a>
       </div>
-      <p style="color:var(--muted);font-size:11px;margin-top:8px">
-        Note: Browser playback requires HLS support. For best results use VLC or copy the URL into your media player.
-      </p>
     </div>`;
   document.body.appendChild(overlay);
+  startPreviewVideo(url, overlay);
   overlay.addEventListener('click', e => {
-    if (e.target === overlay) {
-      const v = overlay.querySelector('video');
-      if (v) { v.pause(); v.src = ''; }
-      overlay.remove();
-    }
+    if (e.target === overlay) closePreview(overlay);
   });
+}
+
+function closePreview(overlay) {
+  if (!overlay) return;
+  const v = overlay.querySelector('video');
+  if (overlay._hls) { try { overlay._hls.destroy(); } catch(_) {} }
+  if (v) { v.pause(); v.removeAttribute('src'); v.load(); }
+  overlay.remove();
+}
+
+function startPreviewVideo(url, overlay) {
+  const video = overlay.querySelector('#preview-video');
+  const status = overlay.querySelector('#preview-status');
+  const setStatus = msg => { if (status) status.textContent = msg; };
+  if (!video) return;
+
+  video.addEventListener('playing', () => setStatus('Playing'));
+  video.addEventListener('error', () => setStatus('Preview failed. Open the URL in VLC or check server logs.'));
+
+  if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = url;
+    video.play().catch(() => setStatus('Click play to start the preview.'));
+    return;
+  }
+
+  const attachHls = () => {
+    if (!window.Hls || !window.Hls.isSupported()) {
+      setStatus('This browser needs HLS.js for preview. Use VLC or copy the stream URL.');
+      return;
+    }
+    const hls = new window.Hls({ lowLatencyMode: true, liveSyncDurationCount: 2 });
+    overlay._hls = hls;
+    hls.on(window.Hls.Events.ERROR, (_event, data) => {
+      if (data?.fatal) setStatus(`Preview error: ${data.type || 'HLS'} ${data.details || ''}`.trim());
+    });
+    hls.loadSource(url);
+    hls.attachMedia(video);
+    hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
+      video.play().catch(() => setStatus('Click play to start the preview.'));
+    });
+  };
+
+  if (window.Hls) return attachHls();
+  const script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/hls.js@1.5.18/dist/hls.min.js';
+  script.onload = attachHls;
+  script.onerror = () => setStatus('Could not load HLS.js. Use VLC or copy the stream URL.');
+  document.head.appendChild(script);
 }
 
 // 
