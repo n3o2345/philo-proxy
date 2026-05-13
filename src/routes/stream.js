@@ -37,6 +37,7 @@ require('events').EventEmitter.defaultMaxListeners = 50;
 const MAX_PHILO_STREAMS   = parseInt(process.env.MAX_PHILO_STREAMS || '3');
 const SESSION_IDLE_TTL    = 5 * 60 * 1000;   // 5 min idle → kill
 const BASE_STREAM_DISPLAY = parseInt(process.env.BASE_STREAM_DISPLAY || '201');
+const STARTUP_MANIFEST_WAIT_MS = parseInt(process.env.STARTUP_MANIFEST_WAIT_MS || '3000', 10);
 const LOW_LATENCY_HLS     = ['1', 'true', 'yes', 'on']
   .includes(String(process.env.LOW_LATENCY_HLS || '').toLowerCase());
 
@@ -178,6 +179,29 @@ function getSessionTelemetry(hlsDir, startedAt) {
   }
 }
 
+function _setHlsHeaders(res) {
+  res.setHeader('Content-Type',  'application/vnd.apple.mpegurl');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Access-Control-Allow-Origin',  '*');
+  res.setHeader('Access-Control-Allow-Headers', '*');
+}
+
+function _sendWarmingManifest(channelId, session, res) {
+  const hls = getHlsTuning();
+  const elapsed = session.startedAt ? Math.round((Date.now() - session.startedAt) / 1000) : 0;
+  _setHlsHeaders(res);
+  res.setHeader('X-PhiloProxy-State', 'warming');
+  res.send([
+    '#EXTM3U',
+    '#EXT-X-VERSION:3',
+    `#EXT-X-TARGETDURATION:${hls.hlsTime}`,
+    '#EXT-X-MEDIA-SEQUENCE:0',
+    `#EXT-X-PROGRAM-DATE-TIME:${new Date().toISOString()}`,
+    `#EXT-X-SESSION-DATA:DATA-ID="com.philoproxy.state",VALUE="warming-${channelId}-${elapsed}s"`,
+    '',
+  ].join('\n'));
+}
+
 // ── Philo sessions ────────────────────────────────────────────────────────────
 // key: channelId → { hlsDir, clients: Set, lastAccess, startedAt,
 //                    _ffmpeg, _page, _context, _display, _pulseSink }
@@ -299,20 +323,21 @@ async function _handlePhiloM3u8Request(channelId, channel, req, res) {
 
   session.lastAccess = Date.now();
 
-  // Wait up to 60 s for first segments (browser startup takes time)
+  // Browser startup can exceed short upstream proxy connect windows. Wait a
+  // little for a real manifest, then return a valid live manifest immediately
+  // so HLS-aware clients/proxies can keep polling instead of timing out.
   const hasSegments = () =>
     fs.existsSync(path.join(session.hlsDir, 'index.m3u8')) &&
     fs.readdirSync(session.hlsDir).some(f => f.endsWith('.ts'));
 
   if (!hasSegments()) {
-    const deadline = Date.now() + 60000;
+    const deadline = Date.now() + Math.max(0, STARTUP_MANIFEST_WAIT_MS);
     while (!hasSegments() && Date.now() < deadline) {
-      await sleep(500);
+      await sleep(250);
       session.lastAccess = Date.now();
     }
     if (!hasSegments()) {
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      return res.status(503).send('Stream failed to start within 60 s — check server logs');
+      return _sendWarmingManifest(channelId, session, res);
     }
   }
 
