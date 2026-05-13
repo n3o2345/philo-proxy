@@ -10,7 +10,7 @@
 services:
 
   # ── NVIDIA NVENC (default) ──────────────────────────────────────────────────
-  philo-proxy:
+  philoproxy:
     image: ghcr.io/n3o2345/philoproxy:main
     # Or build locally:
     # build: .
@@ -28,7 +28,7 @@ services:
     environment:
       TZ:                      ${TZ:-America/Chicago}
       PORT:                    ${PORT:-5050}
-      DB_PATH:                 /data/tvnow.db
+      DB_PATH:                 /data/philoproxy.db
       # Philo — x11grab display
       DISPLAY:                 ":200"
       # Philo — PulseAudio
@@ -62,7 +62,7 @@ services:
       - philo_data:/data
 
   # ── Intel QSV (opt-in) ──────────────────────────────────────────────────────
-  philo-proxy-intel:
+  philoproxy-intel:
     image: ghcr.io/n3o2345/philoproxy:main
     # build: .
     container_name: philoproxy
@@ -77,7 +77,7 @@ services:
     environment:
       TZ:                 ${TZ:-America/Chicago}
       PORT:               ${PORT:-5050}
-      DB_PATH:            /data/tvnow.db
+      DB_PATH:            /data/philoproxy.db
       DISPLAY:            ":200"
       PULSE_SERVER:       unix:/var/run/pulse/native
       PULSE_COOKIE:       /dev/null

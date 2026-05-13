@@ -4,7 +4,7 @@ const Database = require('better-sqlite3');
 const path     = require('path');
 const fs       = require('fs');
 
-const DB_PATH = process.env.DB_PATH || path.join('/data', 'tvnow.db');
+const DB_PATH = process.env.DB_PATH || path.join('/data', 'philoproxy.db');
 
 // Ensure data directory exists
 const dbDir = path.dirname(DB_PATH);
@@ -171,7 +171,7 @@ function initDb() {
     );
   `);
 
-  console.log('[db] TVNow database initialized at', DB_PATH);
+  console.log('[db] PhiloProxy database initialized at', DB_PATH);
   return db;
 }
 

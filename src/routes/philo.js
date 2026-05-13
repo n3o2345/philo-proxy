@@ -109,7 +109,7 @@ const _channelPulse = new Map(); // channelId -> { dir, socket, proc }
 async function _createPulseSink(channelId) {
   if (_channelPulse.has(channelId)) return _channelPulse.get(channelId).socket;
 
-  const pulseDir    = _path2.join(_os.tmpdir(), `tvnow_pulse_${channelId}`);
+  const pulseDir    = _path2.join(_os.tmpdir(), `philoproxy_pulse_${channelId}`);
   const pulseSocket = _path2.join(pulseDir, 'native');
   const paConf      = _path2.join(pulseDir, 'pa.conf');
   const daemonConf  = _path2.join(pulseDir, 'daemon.conf');
@@ -262,7 +262,7 @@ router.post('/verify_code', async (req, res) => {
     const channels = await gqlGetChannels(cookies);
 
     if (source_id) {
-      savePhiloSource(source_id, cookies, user, channels, ident);
+      savePhiloSource(source_id, cookies, user, channels, ident, result.storageState);
       // Kick off a wider guide fetch in the background immediately after login
       gqlGetChannelsWithGuide(cookies)
         .then(guideChannels => { if (guideChannels.length) savePhiloEpg(getDb(), guideChannels); })
@@ -305,10 +305,10 @@ async function _browserSendCode(ident) {
     // Already authenticated? (redirected away from login page)
     if (!finalUrl.includes('/login') && !finalUrl.includes('/authenticate')) {
       console.log('[philo] Already authenticated -- syncing cookies');
-      const cookies = await context.cookies();
-      const cookieStr = philoCookiesAsString(cookies);
+      const storageState = await context.storageState();
+      const cookieStr = philoCookiesAsString(storageState.cookies || []);
       sendStatus = { state: 'done_auth', error: null, message: '' };
-      loginPage  = { page, context, cookieStr, alreadyAuthed: true };
+      loginPage  = { page, context, cookieStr, storageState, alreadyAuthed: true };
       return;
     }
 
@@ -382,10 +382,11 @@ async function _browserVerifyCode(code) {
   // Already authenticated case
   if (loginPage.alreadyAuthed) {
     const cookieStr = loginPage.cookieStr;
+    const storageState = loginPage.storageState;
     try { await loginPage.page.close(); } catch (_) {}
     try { await loginPage.context.close(); } catch (_) {}
     loginPage = null;
-    return { ok: true, cookies: cookieStr };
+    return { ok: true, cookies: cookieStr, storageState };
   }
 
   const { page, context } = loginPage;
@@ -418,8 +419,7 @@ async function _browserVerifyCode(code) {
       } catch (_) {}
     }
     if (!inp) throw new Error('Verification code input not found');
-    await inp.click({ clickCount: 3 });
-    await inp.fill(code);
+    await fillVerificationCode(page, inp, code);
     console.log('[philo] Filled OTP:', code);
 
     // Click verify -- same selectors as Python
@@ -474,7 +474,8 @@ async function _browserVerifyCode(code) {
     }
 
     // Success -- extract cookies from browser context
-    const allCookies = await context.cookies();
+    const storageState = await context.storageState();
+    const allCookies = storageState.cookies || await context.cookies();
     const cookieStr  = philoCookiesAsString(allCookies);
     console.log('[philo] Login successful --', allCookies.filter(c => c.domain.includes('philo')).length, 'philo cookies');
 
@@ -483,7 +484,7 @@ async function _browserVerifyCode(code) {
     try { await page.close(); } catch (_) {}
     try { await context.close(); } catch (_) {}
 
-    return { ok: true, cookies: cookieStr };
+    return { ok: true, cookies: cookieStr, storageState };
 
   } catch (err) {
     console.error('[philo] verify_code error:', err.message);
@@ -492,6 +493,65 @@ async function _browserVerifyCode(code) {
     loginPage = null;
     return { ok: false, error: err.message };
   }
+}
+
+async function fillVerificationCode(page, fallbackInput, code) {
+  const digits = String(code || '').trim().split('');
+  const candidates = page.locator([
+    'input[autocomplete="one-time-code"]',
+    'input[inputmode="numeric"]',
+    'input[name*="code" i]',
+    'input[id*="code" i]',
+    'input[placeholder*="code" i]',
+    'input[type="tel"]',
+    'input[type="text"]',
+    'input:not([type="hidden"])',
+  ].join(','));
+
+  const handles = await candidates.elementHandles();
+  const visibleInputs = [];
+  for (const handle of handles) {
+    try {
+      const usable = await handle.evaluate(el => {
+        const style = window.getComputedStyle(el);
+        const rect = el.getBoundingClientRect();
+        const type = (el.getAttribute('type') || 'text').toLowerCase();
+        return rect.width > 0 && rect.height > 0 &&
+          style.visibility !== 'hidden' &&
+          style.display !== 'none' &&
+          !el.disabled && !el.readOnly &&
+          !['hidden', 'submit', 'button', 'checkbox', 'radio'].includes(type);
+      });
+      if (usable) visibleInputs.push(handle);
+    } catch (_) {}
+  }
+
+  const singleCharInputs = [];
+  for (const handle of visibleInputs) {
+    try {
+      const maxLength = await handle.evaluate(el => Number(el.maxLength || el.getAttribute('maxlength') || 0));
+      if (maxLength === 1) singleCharInputs.push(handle);
+    } catch (_) {}
+  }
+
+  const splitInputs = singleCharInputs.length >= Math.min(4, digits.length)
+    ? singleCharInputs
+    : (visibleInputs.length >= digits.length && visibleInputs.length <= 8 ? visibleInputs : []);
+
+  if (splitInputs.length >= Math.min(4, digits.length)) {
+    for (let i = 0; i < Math.min(digits.length, splitInputs.length); i++) {
+      try {
+        await splitInputs[i].fill(digits[i]);
+      } catch (_) {
+        await splitInputs[i].click();
+        await page.keyboard.type(digits[i]);
+      }
+    }
+    return;
+  }
+
+  await fallbackInput.click({ clickCount: 3 });
+  await fallbackInput.fill(code);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -651,7 +711,7 @@ function philoCookiesAsString(cookies) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Save to DB
 // ─────────────────────────────────────────────────────────────────────────────
-function savePhiloSource(sourceId, cookies, user, channels, ident) {
+function savePhiloSource(sourceId, cookies, user, channels, ident, storageState) {
   const db     = getDb();
   const source = db.prepare('SELECT * FROM sources WHERE id=?').get(sourceId);
   if (!source) return;
@@ -662,6 +722,7 @@ function savePhiloSource(sourceId, cookies, user, channels, ident) {
     config.email = config.email || config.ident;
   }
   config.cookies  = cookies;
+  if (storageState) config.storageState = storageState;
   config.user     = { id: user.id, displayName: user.displayName };
   config.channels = channels.map(ch => ({
     id:         ch.id,
@@ -892,7 +953,7 @@ async function gqlGetCurrentBroadcastId(channelId, cookies) {
 //   navigation. This is the only reliable way -- addCookies() after navigation
 //   does not work because Philo's SPA checks auth on first load.
 // ─────────────────────────────────────────────────────────────────────────────
-async function navigateToChannel(channelId, cookies, broadcastId, display, pulseSink) {
+async function navigateToChannel(channelId, cookies, broadcastId, display, pulseSink, storageState) {
   // 1. Fresh broadcastId
   let activeBroadcastId = await gqlGetCurrentBroadcastId(channelId, cookies);
   if (!activeBroadcastId) {
@@ -905,19 +966,10 @@ async function navigateToChannel(channelId, cookies, broadcastId, display, pulse
   const playerUrl = `${PHILO_BASE}/player/player/broadcast/${activeBroadcastId}`;
   console.log(`[philo] Navigating to ${playerUrl} on display ${display}`);
 
-  // 2. Parse cookie string into Playwright format
-  const pwCookies = cookies.split(';').map(s => s.trim()).filter(Boolean).map(pair => {
-    const eq = pair.indexOf('=');
-    return {
-      name:   pair.slice(0, eq).trim(),
-      value:  pair.slice(eq + 1).trim(),
-      domain: '.philo.com',
-      path:   '/',
-      httpOnly: false,
-      secure:   true,
-      sameSite: 'None',
-    };
-  }).filter(c => c.name && c.value);
+  // 2. Prepare Playwright auth state. Newer Philo sessions can depend on
+  // browser storage in addition to cookies, so prefer the captured state from
+  // pairing and fall back to legacy cookie strings for older configs.
+  const authState = normaliseStorageState(storageState, cookies);
 
   // 3. Launch non-headless browser on the Xvfb display
   const bw = await getStreamBrowser(display, pulseSink);
@@ -927,10 +979,7 @@ async function navigateToChannel(channelId, cookies, broadcastId, display, pulse
   const context = await bw.newContext({
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
     viewport:  { width: 1280, height: 720 },
-    storageState: {
-      cookies: pwCookies,
-      origins: [],
-    },
+    storageState: authState,
   });
 
   const page = await context.newPage();
@@ -945,9 +994,9 @@ async function navigateToChannel(channelId, cookies, broadcastId, display, pulse
   //    Do this before waiting for video -- x11grab starts right after this returns
   try {
     await page.evaluate(() => {
-      if (document.getElementById('tvnow-fullscreen')) return;
+      if (document.getElementById('philoproxy-fullscreen')) return;
       const s = document.createElement('style');
-      s.id = 'tvnow-fullscreen';
+      s.id = 'philoproxy-fullscreen';
       s.textContent = `
         [class*="overlay"],[class*="Overlay"],[class*="controls"],[class*="Controls"],
         [class*="nav"],[class*="Nav"],[class*="header"],[class*="Header"],
@@ -1003,6 +1052,38 @@ async function navigateToChannel(channelId, cookies, broadcastId, display, pulse
 
   console.log('[philo] Browser ready for x11grab capture');
   return { page, context, display };
+}
+
+function normaliseStorageState(storageState, cookies) {
+  const state = storageState && typeof storageState === 'object'
+    ? {
+        cookies: Array.isArray(storageState.cookies) ? storageState.cookies : [],
+        origins: Array.isArray(storageState.origins) ? storageState.origins : [],
+      }
+    : { cookies: [], origins: [] };
+
+  const hasPhiloCookies = state.cookies.some(c => c.domain && c.domain.includes('philo'));
+  if (hasPhiloCookies) return state;
+
+  const parsedCookies = String(cookies || '').split(';')
+    .map(s => s.trim())
+    .filter(Boolean)
+    .map(pair => {
+      const eq = pair.indexOf('=');
+      if (eq <= 0) return null;
+      return {
+        name:   pair.slice(0, eq).trim(),
+        value:  pair.slice(eq + 1).trim(),
+        domain: '.philo.com',
+        path:   '/',
+        httpOnly: false,
+        secure:   true,
+        sameSite: 'None',
+      };
+    })
+    .filter(c => c && c.name && c.value);
+
+  return { cookies: parsedCookies, origins: state.origins };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

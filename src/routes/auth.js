@@ -10,7 +10,7 @@
  * Auth methods (checked in order):
  *   1. Bearer token header:  Authorization: Bearer <token>
  *   2. Query param:          ?token=<token>
- *   3. Session cookie:       tvnow_token=<token>
+ *   3. Session cookie:       philoproxy_token=<token>
  *
  * If no users exist, auth is disabled entirely (first-run open access).
  * Once any user is created, all non-GET non-stream requests require auth.
@@ -25,7 +25,7 @@ const router = express.Router();
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 function _hashPw(pw) {
-  return crypto.createHash('sha256').update(pw + 'tvnow_salt_2024').digest('hex');
+  return crypto.createHash('sha256').update(pw + 'philoproxy_salt_2024').digest('hex');
 }
 
 function _genToken() {
@@ -43,7 +43,7 @@ function _extractToken(req) {
   if (auth.startsWith('Bearer ')) return auth.slice(7).trim();
   if (req.query.token) return req.query.token;
   const cookie = req.headers['cookie'] || '';
-  const m = cookie.match(/tvnow_token=([a-f0-9]{64})/);
+  const m = cookie.match(/philoproxy_token=([a-f0-9]{64})/);
   return m ? m[1] : null;
 }
 
@@ -70,7 +70,7 @@ function requireAuth(role) {
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
     if (role === 'admin' && user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
 
-    req.tvnowUser = user;
+    req.philoproxyUser = user;
     next();
   };
 }
@@ -82,9 +82,9 @@ function requireAuth(role) {
 function softAuth(req, res, next) {
   if (_hasUsers()) {
     const token = _extractToken(req);
-    req.tvnowUser = _getUser(token) || null;
+    req.philoproxyUser = _getUser(token) || null;
   } else {
-    req.tvnowUser = { role: 'admin', username: 'admin' }; // virtual admin in open-access mode
+    req.philoproxyUser = { role: 'admin', username: 'admin' }; // virtual admin in open-access mode
   }
   next();
 }
@@ -106,20 +106,20 @@ router.post('/login', (req, res) => {
   const token = _genToken();
   db.prepare('UPDATE users SET token=?, last_login=datetime(\'now\') WHERE id=?').run(token, user.id);
 
-  res.setHeader('Set-Cookie', `tvnow_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000`);
+  res.setHeader('Set-Cookie', `philoproxy_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000`);
   res.json({ ok: true, token, username: user.username, role: user.role });
 });
 
 // POST /api/auth/logout
 router.post('/logout', (req, res) => {
-  res.setHeader('Set-Cookie', 'tvnow_token=; Path=/; Max-Age=0');
+  res.setHeader('Set-Cookie', 'philoproxy_token=; Path=/; Max-Age=0');
   res.json({ ok: true });
 });
 
 // GET /api/auth/me -- returns current user info (or null if open-access)
 router.get('/me', softAuth, (req, res) => {
-  if (!req.tvnowUser) return res.status(401).json({ error: 'Not authenticated' });
-  const { id, username, role, last_login } = req.tvnowUser;
+  if (!req.philoproxyUser) return res.status(401).json({ error: 'Not authenticated' });
+  const { id, username, role, last_login } = req.philoproxyUser;
   res.json({ id, username, role, last_login, open_access: !_hasUsers() });
 });
 

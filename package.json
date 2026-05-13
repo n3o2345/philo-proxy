@@ -1,5 +1,5 @@
 {
-  "name": "philo-proxy",
+  "name": "philoproxy",
   "version": "1.0.0",
   "description": "Philo live-TV proxy — Playwright OTP login → x11grab → HLS via FFmpeg",
   "main": "src/server.js",

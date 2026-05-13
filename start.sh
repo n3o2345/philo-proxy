@@ -26,7 +26,7 @@ pulseaudio --start \
   --disallow-exit \
   --log-target=stderr \
   --load="module-native-protocol-unix auth-anonymous=1 socket=/var/run/pulse/native" \
-  --load="module-null-sink sink_name=tvnow_out" \
+  --load="module-null-sink sink_name=philoproxy_out" \
   --load="module-null-source source_name=virtual_in" \
   2>/dev/null || true
 echo "[start] PulseAudio started"

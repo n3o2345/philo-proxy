@@ -452,7 +452,7 @@ async function _startPhiloX11grab(channel, config, philoChannelId, broadcastId, 
   }
 
   try {
-    const result = await navigateToChannel(philoChannelId, config.cookies, broadcastId, display, pulseSink);
+    const result = await navigateToChannel(philoChannelId, config.cookies, broadcastId, display, pulseSink, config.storageState);
     session._page    = result.page;
     session._context = result.context;
     console.log(`[stream] Philo ch${channelId}: browser ready on ${display}`);
@@ -480,7 +480,7 @@ async function _startPhiloFfmpegX11grab(display, pulseSink, channelName, channel
        '-g', '30', '-keyint_min', '30', '-threads', '0', '-fps_mode', 'cfr',
        '-x264-params', 'nal-hrd=cbr:force-cfr=1'];
 
-  const audioDevice = pulseSink ? 'out.monitor' : 'tvnow_out.monitor';
+  const audioDevice = pulseSink ? 'out.monitor' : 'philoproxy_out.monitor';
 
   const args = [
     '-hide_banner', '-loglevel', 'warning',

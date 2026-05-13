@@ -147,7 +147,7 @@ to the client.
 ## Troubleshooting
 
 **Stream never starts (60 s timeout)**
-Check `docker logs philo-proxy`. The Playwright browser navigates to Philo and
+Check `docker logs philoproxy`. The Playwright browser navigates to Philo and
 must complete auth before FFmpeg starts. Expired cookies → re-authenticate in
 Sources.
 
