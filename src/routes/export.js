@@ -47,7 +47,7 @@ router.get('/channels.m3u', (req, res) => {
 });
 
 // ── XMLTV EPG ─────────────────────────────────────────────────────────────────
-router.get('/epg.xml', (req, res) => {
+function _buildEpgXml(req) {
   const db   = getDb();
   const now  = Math.floor(Date.now() / 1000);
   const from = parseInt(req.query.from) || now - 3600;
@@ -86,9 +86,24 @@ router.get('/epg.xml', (req, res) => {
   }
 
   xml += '</tv>\n';
+  return xml;
+}
+
+router.get('/epg.xml', (req, res) => {
   res.setHeader('Content-Type', 'application/xml; charset=utf-8');
   res.setHeader('Content-Disposition', 'inline; filename="epg.xml"');
-  res.send(xml);
+  res.send(_buildEpgXml(req));
+});
+
+// masqueradarr's 'remote url' EPG sync ALWAYS probes "<url>.gz" before falling back to the plain URL. With
+// no explicit route for this, Express's SPA catch-all in server.js was serving index.html (200 OK) for it —
+// non-gzip HTML with no gzip magic bytes, fed straight into masqueradarr's saxes parser, which chokes on
+// HTML's boolean/unquoted attributes ("attribute without value"). Serve real gzip here so that probe succeeds.
+router.get('/epg.xml.gz', (req, res) => {
+  const gz = require('zlib').gzipSync(Buffer.from(_buildEpgXml(req), 'utf-8'));
+  res.setHeader('Content-Type', 'application/gzip');
+  res.setHeader('Content-Disposition', 'inline; filename="epg.xml.gz"');
+  res.send(gz);
 });
 
 // ── HDHomeRun compatibility ───────────────────────────────────────────────────
