@@ -40,16 +40,6 @@ const BASE_STREAM_DISPLAY = parseInt(process.env.BASE_STREAM_DISPLAY || '201');
 const STARTUP_MANIFEST_WAIT_MS = parseInt(process.env.STARTUP_MANIFEST_WAIT_MS || '2500', 10);
 const LOW_LATENCY_HLS     = ['1', 'true', 'yes', 'on']
   .includes(String(process.env.LOW_LATENCY_HLS || '').toLowerCase());
-// PROBE-SAFE MANIFEST (P1): a health-checker (Masqueradarr's scheduled channel-probe sweep, uptime
-// monitors, etc.) fetches /philo.m3u8 exactly ONCE per pass and never follows up. A real HLS player,
-// finding no segments in the manifest, re-polls per the HLS spec (roughly every half target-duration).
-// So: the FIRST-ever manifest request for a channel never starts the (expensive) Xvfb+Chromium+ffmpeg
-// pipeline — it just answers with the warming placeholder. Only a SECOND request for the same channel
-// within PROBE_GRACE_MS promotes it to a real session. One-shot probes get a "200 + valid #EXTM3U" (so
-// they're correctly marked live) without ever occupying a MAX_PHILO_STREAMS slot.
-const PROBE_GRACE_MS      = parseInt(process.env.PROBE_GRACE_MS || '4000', 10);
-const PROBE_SAFE_MANIFEST = ['1', 'true', 'yes', 'on']
-  .includes(String(process.env.PROBE_SAFE_MANIFEST ?? 'true').toLowerCase());
 
 // ── Display pool ──────────────────────────────────────────────────────────────
 // Each concurrent Philo session gets its own isolated Xvfb display so
@@ -218,11 +208,6 @@ function _sendWarmingManifest(channelId, session, res) {
 
 const philoSessions = {};
 
-// key: channelId → firstSeenAt (ms). A manifest request with no session yet lands here first instead
-// of starting the pipeline; see PROBE_GRACE_MS above. Cleared once promoted to a real session, or reaped
-// below if nobody ever asked a second time (a one-shot health check).
-const _pendingTouches = {};
-
 // Idle cleanup — runs every 15 s
 setInterval(() => {
   const now = Date.now();
@@ -231,9 +216,6 @@ setInterval(() => {
       console.log(`[stream] expiring idle Philo session ch${id}`);
       _destroyPhiloSession(id, s);
     }
-  }
-  for (const [id, firstSeenAt] of Object.entries(_pendingTouches)) {
-    if (now - firstSeenAt > PROBE_GRACE_MS) delete _pendingTouches[id]; // unconfirmed — was a one-shot probe
   }
 }, 15000);
 
@@ -310,21 +292,6 @@ async function _handlePhiloM3u8Request(channelId, channel, req, res) {
   const allSessions    = Object.keys(philoSessions);
   const activeSessions = allSessions.filter(id => philoSessions[id].clients.size > 0);
   const isNew          = !philoSessions[channelId];
-
-  // PROBE-SAFE MANIFEST: don't count this request as "starting a stream" (and don't touch the
-  // MAX_PHILO_STREAMS gate) until it's been asked for TWICE within PROBE_GRACE_MS. A one-shot health
-  // check (Masqueradarr's channel-probe sweep, an uptime monitor, etc.) never comes back, so it only
-  // ever gets the cheap warming manifest below and never reaches the pipeline.
-  if (PROBE_SAFE_MANIFEST && isNew) {
-    const now = Date.now();
-    const firstSeenAt = _pendingTouches[channelId];
-    if (!firstSeenAt || now - firstSeenAt > PROBE_GRACE_MS) {
-      _pendingTouches[channelId] = now;
-      return _sendWarmingManifest(channelId, { hlsDir: null, startedAt: now }, res);
-    }
-    // Second touch within the grace window — a real player re-polling an empty manifest. Promote it.
-    delete _pendingTouches[channelId];
-  }
 
   if (isNew && allSessions.length >= MAX_PHILO_STREAMS) {
     const names = activeSessions.map(id => {

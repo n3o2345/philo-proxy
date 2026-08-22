@@ -147,12 +147,23 @@ router.get('/lineup.json', (req, res) => {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+// Strips characters that are illegal in XML 1.0 content/attribute values
+// (control chars other than tab/LF/CR). Scraped Philo titles/descriptions
+// occasionally carry these, and libxml2 will bail mid-tag with a confusing
+// "attribute without value" error when one lands inside a quoted attribute.
+function _stripInvalidXmlChars(s) {
+  return s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+}
+
 function _esc(s) {
-  if (!s) return '';
-  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  if (s === null || s === undefined) return '';
+  s = _stripInvalidXmlChars(String(s));
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 }
 
 function _toXmltvDate(unixSec) {
+  if (!Number.isFinite(unixSec)) return '19700101000000 +0000';
   const d   = new Date(unixSec * 1000);
   const pad = n => String(n).padStart(2, '0');
   return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}` +
